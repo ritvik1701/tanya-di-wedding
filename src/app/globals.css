@@ -18,6 +18,7 @@ body {
   color: #2a1a15;
   font-family: var(--font-serif), Georgia, serif;
   -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
 }
 
 /* Flat stone background — no gradients, no shadows */

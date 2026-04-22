@@ -211,7 +211,7 @@ export default function Countdown() {
         </div>
 
         <p
-          className="cd-footer mt-8 max-w-md px-4 text-center text-sm leading-relaxed sm:mt-10 md:mt-12"
+          className="cd-footer mt-8 max-w-xl px-4 text-center text-base leading-relaxed sm:mt-10 sm:text-lg md:mt-12 md:text-xl"
           style={{ color: "#2a1a15" }}
         >
           Until the first of many joyful moments.

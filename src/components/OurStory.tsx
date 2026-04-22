@@ -60,17 +60,6 @@ export default function OurStory() {
           className="mt-6 h-px w-32 sm:mt-8 sm:w-44"
           style={{ backgroundColor: "#9d4130" }}
         />
-
-        <p
-          className="mt-5 max-w-md text-xs italic leading-relaxed sm:mt-6 sm:text-sm md:text-base"
-          style={{
-            fontFamily: "var(--font-serif)",
-            color: "#2a1a15",
-            opacity: 0.7,
-          }}
-        >
-          Coming soon.
-        </p>
       </div>
     </section>
   );

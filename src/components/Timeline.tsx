@@ -385,25 +385,6 @@ export default function Timeline() {
         </div>
       </div>
 
-      {/* Outro divider */}
-      <div className="flex flex-col items-center px-4 pb-12 pt-6 text-center sm:pb-16 md:pb-20">
-        <div
-          className="h-px w-28 sm:w-40"
-          style={{ backgroundColor: "#9d4130" }}
-        />
-        <p
-          className="mt-6 text-sm uppercase sm:text-sm md:text-base"
-          style={{
-            fontFamily: "var(--font-display)",
-            color: "#5f6f4d",
-            letterSpacing: "0.28em",
-            fontWeight: 600,
-          }}
-        >
-          · More details coming soon ·
-        </p>
-      </div>
-
       {/* Rail active styles */}
       <style jsx>{`
         :global(.tl-rail-item .tl-rail-label) {

@@ -3,6 +3,7 @@ import { Cormorant_Garamond, Tenor_Sans, Cinzel, Yatra_One } from "next/font/goo
 import "./globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
 import StarsBackdrop from "@/components/StarsBackdrop";
+import IntroLetter from "@/components/IntroLetter";
 
 const displayFont = Cinzel({
   weight: ["400", "500", "600", "700"],
@@ -52,6 +53,7 @@ export default function RootLayout({
         <SmoothScroll />
         <StarsBackdrop />
         <div className="relative z-10">{children}</div>
+        <IntroLetter />
       </body>
     </html>
   );
