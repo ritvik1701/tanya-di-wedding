@@ -52,3 +52,23 @@ html.lenis body {
   background: #9d4130;
   color: #f0e4cc;
 }
+
+/* Timeline event action buttons — cream outlined, invert on hover */
+.tl-action-btn {
+  border-color: #fff4e0;
+  color: #fff4e0;
+  background-color: transparent;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    opacity 180ms ease;
+}
+.tl-action-btn:hover:not(:disabled):not([aria-disabled="true"]) {
+  background-color: #fff4e0;
+  color: #2a1a15;
+}
+.tl-action-btn:disabled,
+.tl-action-btn[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

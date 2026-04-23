@@ -8,6 +8,14 @@ export const wedding = {
   location: "TBD",
 };
 
+// A point of contact for an event — name, relation/role, and a phone
+// number. Phones render as tel: links in the modal.
+export type Contact = {
+  name: string;
+  role: string;
+  phone: string;
+};
+
 // Timeline of events. Dates are placeholders until confirmed.
 export type WeddingEvent = {
   id: string;
@@ -17,6 +25,11 @@ export type WeddingEvent = {
   venue: string;
   description: string;
   motif: string; // emoji/placeholder for a visual motif later
+  // Google Maps (or similar) link opened by the Directions button. Leave
+  // undefined while the venue is TBD — the button shows a disabled state.
+  directionsUrl?: string;
+  // People guests can call for help with this specific event.
+  contacts: Contact[];
 };
 
 export const events: WeddingEvent[] = [
@@ -29,6 +42,10 @@ export const events: WeddingEvent[] = [
     description:
       "A sun-soaked morning of turmeric blessings, laughter, and the scent of marigolds.",
     motif: "☀",
+    contacts: [
+      { name: "[Name]", role: "Bride's Uncle", phone: "+91 00000 00000" },
+      { name: "[Name]", role: "Groom's Cousin", phone: "+91 00000 00000" },
+    ],
   },
   {
     id: "mehendi",
@@ -39,6 +56,10 @@ export const events: WeddingEvent[] = [
     description:
       "Henna, music, and stories traced in vine and petal across the bride's hands.",
     motif: "✿",
+    contacts: [
+      { name: "[Name]", role: "Bride's Aunt", phone: "+91 00000 00000" },
+      { name: "[Name]", role: "Groom's Sister", phone: "+91 00000 00000" },
+    ],
   },
   {
     id: "sangeet",
@@ -49,6 +70,10 @@ export const events: WeddingEvent[] = [
     description:
       "A night of song and dance — the families come together in celebration.",
     motif: "♪",
+    contacts: [
+      { name: "[Name]", role: "Event Coordinator", phone: "+91 00000 00000" },
+      { name: "[Name]", role: "Family Host", phone: "+91 00000 00000" },
+    ],
   },
   {
     id: "wedding",
@@ -59,15 +84,10 @@ export const events: WeddingEvent[] = [
     description:
       "Around the sacred fire, two families become one. The main event.",
     motif: "❉",
-  },
-  {
-    id: "reception",
-    name: "Reception",
-    date: new Date("2026-08-26T19:00:00+05:30"),
-    time: "7:00 PM onwards",
-    venue: "TBD",
-    description: "A royal evening to toast the newlyweds.",
-    motif: "✦",
+    contacts: [
+      { name: "[Name]", role: "Bride's Brother", phone: "+91 00000 00000" },
+      { name: "[Name]", role: "Groom's Brother", phone: "+91 00000 00000" },
+    ],
   },
 ];
 

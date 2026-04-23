@@ -5,8 +5,9 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Star } from "./Stars";
 
-// Placeholder family data — replace with real names when ready.
-type Person = { role: string; name: string };
+// Placeholder family data — swap `photo` for a real image path (e.g.
+// "/assets/family/tanya-father.jpg") when you have the photos ready.
+type Person = { role: string; name: string; photo?: string };
 type FamilySide = {
   sideLabel: string;
   hi: string;
@@ -71,6 +72,22 @@ export default function Family() {
           ease: "power3.out",
         });
       });
+
+      // Each photo pops in on scroll
+      gsap.utils.toArray<HTMLElement>(".fam-photo").forEach((el) => {
+        gsap.from(el, {
+          scrollTrigger: {
+            trigger: el,
+            start: "top 85%",
+            toggleActions: "play none none reverse",
+          },
+          autoAlpha: 0,
+          y: 20,
+          scale: 0.94,
+          duration: 0.8,
+          ease: "power3.out",
+        });
+      });
     }, root);
     return () => ctx.revert();
   }, []);
@@ -80,7 +97,7 @@ export default function Family() {
       ref={root}
       className="relative px-5 py-16 sm:px-8 sm:py-20 md:py-24"
     >
-      <div className="mx-auto max-w-5xl">
+      <div className="mx-auto max-w-6xl">
         {/* Heading */}
         <div className="fam-heading mb-12 flex flex-col items-center text-center sm:mb-16 md:mb-20">
           <p
@@ -126,9 +143,8 @@ export default function Family() {
           />
         </div>
 
-        {/* Two family cards side by side */}
+        {/* Two family cards side by side (stack on mobile) */}
         <div className="grid grid-cols-1 gap-12 md:grid-cols-[1fr_auto_1fr] md:items-stretch md:gap-4 lg:gap-10">
-          {/* Bride's family */}
           <FamilyCard side={families[0]} />
 
           {/* Central decorative divider between the two families */}
@@ -149,7 +165,6 @@ export default function Family() {
             />
           </div>
 
-          {/* Groom's family */}
           <FamilyCard side={families[1]} />
         </div>
 
@@ -178,11 +193,12 @@ export default function Family() {
 
 function FamilyCard({ side }: { side: FamilySide }) {
   return (
-    <div className="fam-card relative flex flex-col items-center border-2 p-1.5 sm:p-2"
+    <div
+      className="fam-card relative flex flex-col items-center border-2 p-1.5 sm:p-2"
       style={{ borderColor: "#9d4130" }}
     >
       <div
-        className="flex w-full flex-col items-center border px-6 py-8 text-center sm:px-8 sm:py-10 md:px-10 md:py-12"
+        className="flex w-full flex-col items-center border px-5 py-8 text-center sm:px-6 sm:py-10 md:px-8 md:py-12"
         style={{
           borderColor: "#9d4130",
           backgroundColor: "#faf0d8",
@@ -215,41 +231,89 @@ function FamilyCard({ side }: { side: FamilySide }) {
         </span>
 
         <div
-          className="my-5 h-px w-20 sm:my-6 sm:w-28"
+          className="my-6 h-px w-20 sm:my-8 sm:w-28"
           style={{ backgroundColor: "#9d4130", opacity: 0.55 }}
         />
 
-        <ul className="flex w-full flex-col gap-4 sm:gap-5">
+        {/* Photo grid — 2 columns, 2 rows */}
+        <div className="grid w-full grid-cols-2 gap-4 sm:gap-5 md:gap-6">
           {side.people.map((p) => (
-            <li
-              key={p.role}
-              className="flex flex-col items-center"
-            >
+            <PersonCard key={p.role} person={p} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PersonCard({ person }: { person: Person }) {
+  const initial = person.name.replace(/[\[\]]/g, "").trim().charAt(0) || "·";
+
+  return (
+    <div className="fam-photo flex flex-col items-center">
+      {/* Photo frame — portrait, with inner cream matte and terracotta border */}
+      <div
+        className="relative w-full border p-1 sm:p-1.5"
+        style={{
+          borderColor: "#9d4130",
+          aspectRatio: "3 / 4",
+          backgroundColor: "#9d4130",
+        }}
+      >
+        <div
+          className="relative h-full w-full overflow-hidden"
+          style={{ backgroundColor: "#ebdbb4" }}
+        >
+          {person.photo ? (
+            <img
+              src={person.photo}
+              alt={person.name}
+              className="h-full w-full object-cover"
+              draggable={false}
+            />
+          ) : (
+            /* Placeholder — subtle cream panel with initial */
+            <div className="flex h-full w-full items-center justify-center">
               <span
-                className="text-xs uppercase sm:text-sm md:text-sm"
+                className="select-none"
                 style={{
                   fontFamily: "var(--font-display)",
-                  color: "#5f6f4d",
-                  letterSpacing: "0.3em",
-                  fontWeight: 600,
-                }}
-              >
-                {p.role}
-              </span>
-              <span
-                className="mt-1 text-lg sm:text-xl md:text-2xl"
-                style={{
-                  fontFamily: "var(--font-serif)",
                   color: "#9d4130",
-                  fontWeight: 500,
+                  opacity: 0.35,
+                  fontSize: "clamp(2.5rem, 8vw, 4.5rem)",
+                  fontWeight: 600,
+                  letterSpacing: "0.05em",
                 }}
               >
-                {p.name}
+                {initial}
               </span>
-            </li>
-          ))}
-        </ul>
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Role + name beneath the photo */}
+      <span
+        className="mt-3 text-[0.7rem] uppercase sm:mt-4 sm:text-xs md:text-sm"
+        style={{
+          fontFamily: "var(--font-display)",
+          color: "#5f6f4d",
+          letterSpacing: "0.3em",
+          fontWeight: 600,
+        }}
+      >
+        {person.role}
+      </span>
+      <span
+        className="mt-1 text-base sm:text-lg md:text-xl"
+        style={{
+          fontFamily: "var(--font-serif)",
+          color: "#9d4130",
+          fontWeight: 500,
+        }}
+      >
+        {person.name}
+      </span>
     </div>
   );
 }

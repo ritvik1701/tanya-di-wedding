@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useLayoutEffect, useRef } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { events } from "@/config/wedding";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { events, type WeddingEvent } from "@/config/wedding";
 import EventIcon from "./EventIcon";
+import ThemeMotif from "./ThemeMotif";
 import { getLenis } from "./SmoothScroll";
+import ContactsModal from "./ContactsModal";
 
 const formatDate = (d: Date) =>
   d.toLocaleDateString("en-GB", {
@@ -14,397 +14,435 @@ const formatDate = (d: Date) =>
     month: "long",
   });
 
+// Background images per event. Sangeet doesn't have one yet — fall back
+// to a placeholder colour.
+const EVENT_BG_IMAGES: Record<string, string | null> = {
+  haldi: "/assets/backgrounds/haldi.jpg",
+  mehendi: "/assets/backgrounds/mehendi.jpg",
+  sangeet: null,
+  wedding: "/assets/backgrounds/wedding.jpg",
+};
+const EVENT_BG_FALLBACK: Record<string, string> = {
+  haldi: "#f4c15b",
+  mehendi: "#8ba15a",
+  sangeet: "#b77aa2",
+  wedding: "#c74a2b",
+};
+
+// Unified creamy text colour for every event — reads cleanly over every
+// darkened background.
+const FG_TITLE = "#fff4e0";
+const FG_BODY = "#fff4e0";
+const FG_LABEL = "#e8dbb4";
+
+// Hindi translations for each event — displayed large, with the English
+// name as a smaller caps subtitle underneath (matching the hero treatment).
+const EVENT_HI: Record<string, string> = {
+  haldi: "हल्दी",
+  mehendi: "मेहंदी",
+  sangeet: "संगीत",
+  wedding: "विवाह",
+};
+
+// Per-event theme — `color` drives the motif + accent visuals, `name`
+// is the human-readable palette label shown in "we celebrate in …".
+const EVENT_THEMES: Record<
+  string,
+  { color: string; accent: string; name: string }
+> = {
+  haldi: { color: "#b994c6", accent: "#d8bfe2", name: "lilac" },
+  mehendi: { color: "#8aa36a", accent: "#bcd08f", name: "henna green" },
+  sangeet: { color: "#8a6bb3", accent: "#e6b22b", name: "indigo" },
+  wedding: { color: "#d8525c", accent: "#c9a35d", name: "crimson" },
+};
+
 export default function Timeline() {
   const sectionRef = useRef<HTMLElement>(null);
-  const pinnedRef = useRef<HTMLDivElement>(null);
-  const panelRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const railRefs = useRef<(HTMLLIElement | null)[]>([]);
+  const deckRef = useRef<HTMLDivElement>(null);
 
-  const N = events.length;
+  // Progress sidebar state
+  const [active, setActive] = useState(0);
+  const [visible, setVisible] = useState(false);
 
-  // Refs for auto-snap state
-  const isProgScrolling = useRef(false);
-  const currentSnapIdx = useRef(0);
-
-  // Scroll to a specific event via Lenis (used by both click and auto-snap)
-  const scrollToEvent = useCallback(
-    (index: number, duration = 0.9) => {
-      const pinned = pinnedRef.current;
-      if (!pinned) return;
-
-      const rect = pinned.getBoundingClientRect();
-      const pinnedDocTop = rect.top + window.scrollY;
-      const scrollRange = pinned.offsetHeight - window.innerHeight;
-      if (scrollRange <= 0) return;
-
-      const clamped = Math.max(0, Math.min(N - 1, index));
-      const targetProgress = clamped / (N - 1);
-      const targetY = pinnedDocTop + targetProgress * scrollRange;
-
-      isProgScrolling.current = true;
-      currentSnapIdx.current = clamped;
-
-      const lenis = getLenis();
-      const done = () => {
-        // Release a touch later so any trailing ScrollTrigger onUpdate events
-        // from the programmatic scroll don't re-fire auto-snap.
-        setTimeout(() => {
-          isProgScrolling.current = false;
-        }, 60);
-      };
-
-      if (lenis) {
-        lenis.scrollTo(targetY, {
-          duration,
-          easing: (t: number) => 1 - Math.pow(1 - t, 3),
-          lock: true,
-          onComplete: done,
-        });
-      } else {
-        window.scrollTo({ top: targetY, behavior: "smooth" });
-        setTimeout(done, duration * 1000);
-      }
-    },
-    [N]
+  // Which event's contacts modal is open (null = closed)
+  const [openEventId, setOpenEventId] = useState<string | null>(null);
+  const openEvent = useMemo<WeddingEvent | null>(
+    () => events.find((e) => e.id === openEventId) ?? null,
+    [openEventId]
   );
 
-  useLayoutEffect(() => {
-    const ctx = gsap.context(() => {
-      // Initial state: first panel fully visible, others hidden below
-      panelRefs.current.forEach((p, i) => {
-        if (!p) return;
-        gsap.set(p, { opacity: i === 0 ? 1 : 0, y: i === 0 ? 0 : 40 });
-      });
-      railRefs.current.forEach((r, i) => {
-        if (!r) return;
-        r.classList.toggle("is-active", i === 0);
-      });
+  // Track which event section is currently in view so the sidebar dot
+  // highlights as we scroll through the slide deck.
+  useEffect(() => {
+    const update = () => {
+      const deck = deckRef.current;
+      if (!deck) return;
+      const rect = deck.getBoundingClientRect();
+      const vh = window.innerHeight;
 
-      // Scrubbed master timeline — total length = (N - 1).
-      // In every unit interval [i, i+1]:
-      //   outgoing fades out [i+0.80 → i+0.90]  (duration 0.10)
-      //   incoming fades in  [i+0.90 → i+1.00]  (duration 0.10)
-      // The two tweens touch at i+0.9 with zero overlap and zero gap.
-      // Crucially, since auto-snap fires as soon as the user moves PAST the
-      // current snap point, this whole transition zone plays during the
-      // programmatic Lenis scroll — the user never scrolls through it manually.
-      const master = gsap.timeline({
-        defaults: { ease: "none" },
-        scrollTrigger: {
-          trigger: pinnedRef.current,
-          start: "top top",
-          end: "bottom bottom",
-          scrub: 0.2,
-        },
-      });
-
-      for (let i = 0; i < N - 1; i++) {
-        const outgoing = panelRefs.current[i];
-        const incoming = panelRefs.current[i + 1];
-        if (!outgoing || !incoming) continue;
-
-        master.to(
-          outgoing,
-          { opacity: 0, y: -40, duration: 0.1 },
-          i + 0.8
-        );
-        master.fromTo(
-          incoming,
-          { opacity: 0, y: 40 },
-          { opacity: 1, y: 0, duration: 0.1 },
-          i + 0.9
-        );
+      // Hide when the deck isn't in view
+      if (rect.top > 0 || rect.bottom < vh * 0.5) {
+        setVisible(false);
+        return;
       }
+      setVisible(true);
 
-      // Custom auto-snap + rail highlight
-      // Fires the moment the user moves past a small threshold from the
-      // currently-held event, sweeping them to the next via Lenis.
-      const AUTO_SNAP_THRESHOLD = 0.12; // 12% of a segment — snappy but not twitchy
+      // Each event occupies one viewport-height of scroll in the deck.
+      const scrolledPast = Math.max(0, -rect.top);
+      const idx = Math.min(
+        events.length - 1,
+        Math.max(0, Math.floor(scrolledPast / vh + 0.15))
+      );
+      setActive(idx);
+    };
 
-      ScrollTrigger.create({
-        trigger: pinnedRef.current,
-        start: "top top",
-        end: "bottom bottom",
-        onUpdate: (self) => {
-          const exact = self.progress * (N - 1);
-          // Rail: highlight nearest-rounded index (so label flips at midpoint)
-          const roundedIdx = Math.min(
-            N - 1,
-            Math.max(0, Math.round(exact))
-          );
-          railRefs.current.forEach((r, i) => {
-            if (!r) return;
-            r.classList.toggle("is-active", i === roundedIdx);
-          });
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, []);
 
-          // Auto-snap: ignore while a programmatic scroll is running
-          if (isProgScrolling.current) return;
+  // Click a dot → smoothly scroll to that event's slot in the deck
+  const scrollToEvent = useCallback((idx: number) => {
+    const deck = deckRef.current;
+    if (!deck) return;
+    const rect = deck.getBoundingClientRect();
+    const deckTop = rect.top + window.scrollY;
+    const targetY = deckTop + idx * window.innerHeight;
 
-          const cur = currentSnapIdx.current;
-          const delta = exact - cur;
-
-          if (delta > AUTO_SNAP_THRESHOLD && cur < N - 1) {
-            scrollToEvent(cur + 1, 0.55);
-          } else if (delta < -AUTO_SNAP_THRESHOLD && cur > 0) {
-            scrollToEvent(cur - 1, 0.55);
-          }
-        },
+    const lenis = getLenis();
+    if (lenis) {
+      lenis.scrollTo(targetY, {
+        duration: 0.9,
+        easing: (t: number) => 1 - Math.pow(1 - t, 3),
+        lock: true,
       });
-
-      // Heading entrance
-      gsap.from(".tl-heading > *", {
-        scrollTrigger: {
-          trigger: ".tl-heading",
-          start: "top 80%",
-          toggleActions: "play none none reverse",
-        },
-        autoAlpha: 0,
-        y: 24,
-        duration: 1,
-        stagger: 0.1,
-        ease: "power3.out",
-      });
-    }, sectionRef);
-
-    return () => ctx.revert();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scrollToEvent]);
+    } else {
+      window.scrollTo({ top: targetY, behavior: "smooth" });
+    }
+  }, []);
 
   return (
     <section ref={sectionRef} className="relative">
-      {/* Intro heading — shlok and "The Journey" title with comfortable rhythm */}
-      <div className="tl-heading relative flex flex-col items-center gap-8 px-5 py-14 text-center sm:gap-10 sm:px-8 sm:py-18 md:gap-14 md:py-22">
-        {/* Shlok group */}
-        <div className="flex flex-col items-center">
-          <span
-            className="block"
-            lang="hi"
-            aria-hidden
-            style={{
-              fontFamily: "var(--font-hindi)",
-              color: "#ab1b23",
-              fontSize: "clamp(2.5rem, 6vw, 4.5rem)",
-              lineHeight: 1,
-            }}
-          >
-            ॐ
-          </span>
-          <p
-            className="mt-6 leading-[1.55] sm:mt-8"
-            lang="hi"
-            style={{
-              fontFamily: "var(--font-hindi)",
-              color: "#9d4130",
-              fontSize: "clamp(1rem, 2.4vw, 1.6rem)",
-            }}
-          >
-            वक्रतुण्ड महाकाय सूर्यकोटि समप्रभ
-            <br />
-            निर्विघ्नं कुरु मे देव सर्वकार्येषु सर्वदा
-          </p>
-          <p
-            className="mt-5 max-w-md text-xs italic leading-relaxed sm:mt-6 sm:text-sm md:text-base"
-            style={{
-              fontFamily: "var(--font-serif)",
-              color: "#2a1a15",
-              opacity: 0.75,
-            }}
-          >
-            May this auspicious union be free of all obstacles.
-          </p>
-        </div>
-
-        {/* Decorative midpoint divider */}
-        <div
-          className="h-px w-24 sm:w-32"
-          style={{ backgroundColor: "#9d4130", opacity: 0.5 }}
-          aria-hidden
-        />
-
-        {/* Journey title group */}
-        <div className="flex flex-col items-center">
-          <p
-            className="text-sm uppercase sm:text-sm md:text-base"
-            style={{
-              fontFamily: "var(--font-display)",
-              color: "#5f6f4d",
-              letterSpacing: "0.28em",
-              fontWeight: 600,
-            }}
-          >
-            · A week of celebrations ·
-          </p>
-          <h2
-            className="mt-5 text-3xl uppercase sm:mt-7 sm:text-4xl md:text-5xl lg:text-6xl"
-            style={{
-              fontFamily: "var(--font-display)",
-              color: "#9d4130",
-              letterSpacing: "0.12em",
-              fontWeight: 600,
-            }}
-          >
-            The Journey
-          </h2>
-          <div
-            className="mt-8 h-px w-28 sm:mt-10 sm:w-40"
-            style={{ backgroundColor: "#9d4130" }}
-          />
-        </div>
-      </div>
-
-      {/* Pinned full-screen timeline experience */}
-      <div
-        ref={pinnedRef}
-        className="relative"
-        style={{ height: `${events.length * 100}svh` }}
-      >
-        <div className="sticky top-0 flex h-[100svh] items-center overflow-hidden px-5 sm:px-8 md:px-12">
-          <div className="mx-auto grid w-full max-w-6xl grid-cols-[auto_minmax(0,1fr)] items-center gap-5 sm:gap-10 md:gap-16 lg:gap-20">
-            {/* Left: static timeline rail */}
-            <ul className="relative flex flex-col gap-6 sm:gap-10 md:gap-12">
-              {/* continuous line behind the dots */}
+      {/* Slide deck — each section sticks to the top of the viewport and
+          the next one slides over it as you scroll. */}
+      <div ref={deckRef} className="relative">
+        {/* Progress sidebar: vertical rail with 4 dots over the slide deck.
+            Fixed in the viewport, only visible while the deck is in view. */}
+        <nav
+          aria-label="Events progress"
+          className={`pointer-events-none fixed bottom-6 left-1/2 z-30 -translate-x-1/2 transition-opacity duration-500 sm:bottom-8 ${
+            visible ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          <div className="flex flex-col items-center">
+            {/* Horizontal dot rail with a thin connecting line */}
+            <div className="relative flex items-center gap-6 sm:gap-8">
+              {/* Line behind the dots */}
               <span
                 aria-hidden
-                className="absolute left-[9px] top-2 h-[calc(100%-1rem)] w-px sm:left-[11px] md:left-[13px]"
-                style={{ backgroundColor: "#9d4130", opacity: 0.25 }}
+                className="absolute left-2 right-2 top-1/2 h-px -translate-y-1/2"
+                style={{ backgroundColor: FG_LABEL, opacity: 0.3 }}
               />
-
-              {events.map((ev, i) => (
-                <li
-                  key={ev.id}
-                  ref={(el) => {
-                    railRefs.current[i] = el;
-                  }}
-                  className="tl-rail-item group relative flex cursor-pointer items-center gap-0 sm:gap-4 md:gap-5"
-                  onClick={() => scrollToEvent(i)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      scrollToEvent(i);
-                    }
-                  }}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`Jump to ${ev.name}`}
-                >
-                  <span
-                    className="tl-rail-dot relative z-10 flex h-[18px] w-[18px] items-center justify-center rounded-full transition-all duration-500 sm:h-[22px] sm:w-[22px] md:h-[26px] md:w-[26px]"
-                    style={{
-                      backgroundColor: "#f0e4cc",
-                      border: "1.5px solid #9d4130",
-                    }}
+              {events.map((ev, i) => {
+                const isActive = active === i;
+                return (
+                  <button
+                    key={ev.id}
+                    type="button"
+                    onClick={() => scrollToEvent(i)}
+                    className="pointer-events-auto relative z-10"
+                    aria-label={`Go to ${ev.name}`}
+                    aria-current={isActive ? "step" : undefined}
                   >
+                    {/* Fixed 16×16 wrapper keeps every dot on the same
+                        Y axis regardless of inner dot's size. */}
                     <span
-                      className="tl-rail-dot-inner block rounded-full transition-all duration-500"
-                      style={{
-                        width: "6px",
-                        height: "6px",
-                        backgroundColor: "#9d4130",
-                      }}
-                    />
-                  </span>
-                  <span
-                    className="tl-rail-label hidden whitespace-nowrap text-sm uppercase transition-all duration-500 group-hover:opacity-100 sm:inline md:text-xs"
-                    style={{
-                      fontFamily: "var(--font-display)",
-                      color: "#9d4130",
-                      letterSpacing: "0.18em",
-                      fontWeight: 600,
-                    }}
-                  >
-                    {ev.name}
-                  </span>
-                </li>
-              ))}
-            </ul>
-
-            {/* Right: stacked event panels (grid-stack) — claims real vertical space */}
-            <div className="relative grid min-h-[60svh] items-center md:min-h-[70svh]">
-              {events.map((ev, i) => (
-                <div
-                  key={ev.id}
-                  ref={(el) => {
-                    panelRefs.current[i] = el;
-                  }}
-                  className="col-start-1 row-start-1 flex min-w-0 flex-col justify-center"
-                >
-                  <span
-                    className="mb-4 inline-flex h-10 w-10 items-center justify-center sm:mb-6 sm:h-14 sm:w-14 md:mb-8 md:h-20 md:w-20 lg:h-24 lg:w-24"
-                    aria-hidden
-                  >
-                    <EventIcon
-                      id={ev.id}
-                      size={84}
-                      color="#9d4130"
-                    />
-                  </span>
-                  <p
-                    className="text-xs uppercase sm:text-sm md:text-sm"
-                    style={{
-                      fontFamily: "var(--font-display)",
-                      color: "#5f6f4d",
-                      letterSpacing: "0.2em",
-                      fontWeight: 600,
-                    }}
-                  >
-                    {formatDate(ev.date)} · {ev.time}
-                  </p>
-                  <h3
-                    className="mt-2 uppercase leading-none sm:mt-3"
-                    style={{
-                      fontFamily: "var(--font-display)",
-                      color: "#9d4130",
-                      letterSpacing: "0.03em",
-                      fontWeight: 600,
-                      fontSize: "clamp(1.5rem, 7.5vw, 7rem)",
-                    }}
-                  >
-                    {ev.name}
-                  </h3>
-                  <p
-                    className="mt-4 max-w-md text-xs leading-relaxed sm:mt-6 sm:text-sm md:mt-8 md:max-w-xl md:text-base lg:text-lg"
-                    style={{ color: "#2a1a15" }}
-                  >
-                    {ev.description}
-                  </p>
-                  <p
-                    className="mt-4 text-xs uppercase sm:mt-6 sm:text-sm md:mt-8 md:text-sm"
-                    style={{
-                      fontFamily: "var(--font-display)",
-                      color: "#5f6f4d",
-                      letterSpacing: "0.18em",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Venue · {ev.venue}
-                  </p>
-                </div>
-              ))}
+                      aria-hidden
+                      className="flex h-4 w-4 items-center justify-center"
+                    >
+                      <span
+                        className="block rounded-full transition-all duration-500 ease-out"
+                        style={{
+                          width: isActive ? 14 : 8,
+                          height: isActive ? 14 : 8,
+                          backgroundColor: isActive
+                            ? FG_TITLE
+                            : "transparent",
+                          border: `1.5px solid ${FG_TITLE}`,
+                          boxShadow: isActive
+                            ? `0 0 0 4px rgba(255, 244, 224, 0.15)`
+                            : "none",
+                        }}
+                      />
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
-        </div>
+        </nav>
+
+        {events.map((ev) => {
+          const bgImage = EVENT_BG_IMAGES[ev.id];
+          const bgColor = EVENT_BG_FALLBACK[ev.id] ?? "#f0e4cc";
+          const hi = EVENT_HI[ev.id] ?? ev.name;
+          const theme = EVENT_THEMES[ev.id] ?? {
+            color: FG_TITLE,
+            accent: FG_TITLE,
+            name: "",
+          };
+          return (
+            <section
+              key={ev.id}
+              className="sticky top-0 flex h-[100svh] items-center justify-center overflow-hidden px-6 sm:px-10 md:px-14"
+              style={{
+                backgroundColor: bgColor,
+                backgroundImage: bgImage
+                  ? `linear-gradient(120deg, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.55) 55%, rgba(0,0,0,0.35) 100%), url(${bgImage})`
+                  : "linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45))",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+              }}
+            >
+              <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-start text-left">
+                <span
+                  className="mb-4 inline-flex h-14 w-14 items-center justify-center sm:mb-6 sm:h-20 sm:w-20 md:h-24 md:w-24"
+                  aria-hidden
+                  style={{ color: FG_TITLE }}
+                >
+                  <EventIcon id={ev.id} size={96} color={FG_TITLE} />
+                </span>
+                <p
+                  className="flex flex-col gap-y-1 text-sm uppercase sm:flex-row sm:flex-wrap sm:gap-x-2 sm:text-base md:text-lg"
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    color: FG_LABEL,
+                    letterSpacing: "0.2em",
+                    fontWeight: 600,
+                  }}
+                >
+                  <span>{formatDate(ev.date)}</span>
+                  <span aria-hidden className="hidden sm:inline">
+                    ·
+                  </span>
+                  <span>{ev.time}</span>
+                </p>
+
+                {/* Hindi name (primary) */}
+                <span
+                  className="mt-3 block leading-none sm:mt-4"
+                  lang="hi"
+                  style={{
+                    fontFamily: "var(--font-hindi)",
+                    color: FG_TITLE,
+                    fontSize: "clamp(3rem, 12vw, 10rem)",
+                    lineHeight: 1,
+                  }}
+                >
+                  {hi}
+                </span>
+
+                {/* English subtitle (smaller, caps) */}
+                <span
+                  className="mt-3 text-sm uppercase sm:mt-4 sm:text-base md:text-lg"
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    color: FG_LABEL,
+                    letterSpacing: "0.4em",
+                    fontWeight: 600,
+                  }}
+                >
+                  {ev.name}
+                </span>
+
+                {/* Theme motif + dress-code caption — the ornament and
+                    "· WE CELEBRATE IN … ·" label together communicate
+                    the event's palette as a guest cue. Responsive size
+                    so the motif reads prominently on larger viewports. */}
+                <div className="mt-6 flex items-center gap-4 sm:mt-7 sm:gap-5">
+                  <span
+                    className="block shrink-0"
+                    style={{
+                      width: "clamp(72px, 10vw, 96px)",
+                      height: "clamp(72px, 10vw, 96px)",
+                    }}
+                  >
+                    <ThemeMotif color={theme.color} size="100%" />
+                  </span>
+                  <span
+                    className="flex flex-col gap-y-0.5 text-xs uppercase sm:flex-row sm:gap-x-2 sm:text-sm md:text-base"
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      color: FG_LABEL,
+                      letterSpacing: "0.3em",
+                      fontWeight: 600,
+                    }}
+                  >
+                    <span>We celebrate</span>
+                    <span>in {theme.name}</span>
+                  </span>
+                </div>
+
+                <p
+                  className="mt-6 max-w-2xl text-base leading-relaxed sm:mt-8 sm:text-lg md:text-xl lg:text-2xl"
+                  style={{ color: FG_BODY }}
+                >
+                  {ev.description}
+                </p>
+                <p
+                  className="mt-6 text-sm uppercase sm:mt-8 sm:text-base md:text-lg"
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    color: FG_LABEL,
+                    letterSpacing: "0.18em",
+                    fontWeight: 600,
+                  }}
+                >
+                  Venue · {ev.venue}
+                </p>
+
+                {/* Action buttons: directions + points of contact */}
+                <div className="mt-6 flex flex-wrap gap-3 sm:mt-8 sm:gap-4">
+                  <EventButton
+                    as={ev.directionsUrl ? "a" : "button"}
+                    href={ev.directionsUrl}
+                    disabled={!ev.directionsUrl}
+                    ariaLabel={
+                      ev.directionsUrl
+                        ? `Open directions to ${ev.name}`
+                        : `Directions to ${ev.name} coming soon`
+                    }
+                  >
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      aria-hidden
+                    >
+                      <path
+                        d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <circle
+                        cx="12"
+                        cy="10"
+                        r="3"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                      />
+                    </svg>
+                    Directions
+                  </EventButton>
+                  <EventButton
+                    as="button"
+                    onClick={() => setOpenEventId(ev.id)}
+                    ariaLabel={`View points of contact for ${ev.name}`}
+                  >
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      aria-hidden
+                    >
+                      <path
+                        d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <circle
+                        cx="9"
+                        cy="7"
+                        r="4"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                      />
+                      <path
+                        d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    Points of Contact
+                  </EventButton>
+                </div>
+              </div>
+            </section>
+          );
+        })}
       </div>
 
-      {/* Rail active styles */}
-      <style jsx>{`
-        :global(.tl-rail-item .tl-rail-label) {
-          opacity: 0.42;
-        }
-        :global(.tl-rail-item.is-active .tl-rail-label) {
-          opacity: 1;
-          transform: translateX(4px);
-        }
-        :global(.tl-rail-item .tl-rail-dot) {
-          transform: scale(0.82);
-        }
-        :global(.tl-rail-item.is-active .tl-rail-dot) {
-          transform: scale(1.15);
-          background-color: #9d4130 !important;
-        }
-        :global(.tl-rail-item.is-active .tl-rail-dot-inner) {
-          background-color: #f0e4cc !important;
-        }
-      `}</style>
+      <ContactsModal event={openEvent} onClose={() => setOpenEventId(null)} />
     </section>
+  );
+}
+
+// Outlined cream button used for the two per-event actions. Renders as
+// either a native button or an anchor depending on `as`.
+type EventButtonProps = {
+  children: React.ReactNode;
+  as: "a" | "button";
+  href?: string;
+  onClick?: () => void;
+  disabled?: boolean;
+  ariaLabel?: string;
+};
+
+function EventButton({
+  children,
+  as,
+  href,
+  onClick,
+  disabled,
+  ariaLabel,
+}: EventButtonProps) {
+  const className =
+    "tl-action-btn group inline-flex items-center gap-2 border px-4 py-2.5 text-[11px] uppercase sm:gap-2.5 sm:px-5 sm:py-3 sm:text-xs";
+  const style: React.CSSProperties = {
+    letterSpacing: "0.22em",
+    fontFamily: "var(--font-display)",
+    fontWeight: 600,
+  };
+
+  if (as === "a" && href && !disabled) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={ariaLabel}
+        className={className}
+        style={style}
+      >
+        {children}
+      </a>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-disabled={disabled || undefined}
+      aria-label={ariaLabel}
+      className={className}
+      style={style}
+    >
+      {children}
+    </button>
   );
 }
