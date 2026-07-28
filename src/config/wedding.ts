@@ -3,8 +3,8 @@
 export const wedding = {
   bride: "Tanya",
   groom: "Hemabh",
-  // Main wedding date. Using local time (IST-like) — adjust if needed.
-  date: new Date("2026-08-25T00:00:00+05:30"),
+  // Main wedding date, in IST. This is what the countdown ticks down to.
+  date: new Date("2026-08-25T17:00:00+05:30"),
   location: "TBD",
 };
 

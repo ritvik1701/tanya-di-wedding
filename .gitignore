@@ -24,6 +24,10 @@
 .DS_Store
 *.pem
 
+# this project uses npm — package-lock.json is the tracked lockfile
+pnpm-lock.yaml
+yarn.lock
+
 # debug
 npm-debug.log*
 yarn-debug.log*

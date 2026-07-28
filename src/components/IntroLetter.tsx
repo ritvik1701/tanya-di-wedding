@@ -2,6 +2,7 @@
 
 import { useLayoutEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Star } from "./Stars";
 import { getLenis } from "./SmoothScroll";
 
@@ -63,9 +64,12 @@ const PETAL_DEFS: PetalDef[] = Array.from({ length: PETAL_COUNT }, (_, i) => {
  *   7. Card grows into the real hero-window position (pixel-accurate)
  *   8. Card flips in 3D to reveal the couple's names on its back face
  *   9. Marigold petals burst from the card and drift down
- *  10. Overlay fades, dispatching `th:hero-reveal` so Hero plays its
- *      entrance animation (lamps drop, motifs slide in — names are
- *      already visible from the flipped card / hero mount state).
+ *  10. The page is handed back: scroll unlocks, the overlay re-anchors to
+ *      the document so the petals scroll away with the Hero, and
+ *      `th:hero-reveal` fires so Hero plays its entrance animation.
+ *      Background + card cross-fade into the Hero's identical window.
+ *  11. The now-transparent, click-through overlay lingers while the last
+ *      petals fall past the bottom of the Hero, then unmounts.
  */
 export default function IntroLetter() {
   const [hidden, setHidden] = useState(false);
@@ -97,6 +101,37 @@ export default function IntroLetter() {
     // tick once it's actually up.
     const lenisTimer = window.setTimeout(stopLenis, 0);
 
+    // Hands the page back to the reader. Runs at the reveal beat rather
+    // than at the end of the timeline, so the trailing petal fall doesn't
+    // hold scrolling hostage. Idempotent — the cleanup calls it again as
+    // a safety net if the timeline never reached that point.
+    let released = false;
+    const release = () => {
+      if (released) return;
+      released = true;
+
+      document.documentElement.style.overflow = prevHtmlOverflow;
+      document.body.style.overflow = prevBodyOverflow;
+      getLenis()?.start();
+      // The section ScrollTriggers were measured while the page was
+      // scroll-locked; re-measure now that it isn't.
+      ScrollTrigger.refresh();
+
+      const rootEl = rootRef.current;
+      if (rootEl) {
+        // Swap viewport anchoring for document anchoring. With no
+        // positioned ancestor, `absolute` + inset-0 resolves against the
+        // initial containing block: a viewport-sized box at the document
+        // origin, which is exactly the Hero. Scroll is still pinned at 0
+        // at this instant, so nothing shifts. From here the petals scroll
+        // away with the Hero instead of hovering over the viewport.
+        rootEl.style.position = "absolute";
+        rootEl.style.pointerEvents = "none";
+      }
+
+      window.dispatchEvent(new Event("th:hero-reveal"));
+    };
+
     const ctx = gsap.context(() => {
       // Corner stars + eyebrow fade-in
       gsap.from(".il-reveal", {
@@ -108,10 +143,7 @@ export default function IntroLetter() {
       });
 
       const tl = gsap.timeline({
-        onComplete: () => {
-          window.dispatchEvent(new Event("th:hero-reveal"));
-          setHidden(true);
-        },
+        onComplete: () => setHidden(true),
       });
 
       // Card centring via GSAP (percentages separate from later pixel x/y)
@@ -348,26 +380,33 @@ export default function IntroLetter() {
       // reveal beat, not after it.
       tl.call(launchPetals, [], "-=0.25");
 
-      // 10. Fade the background + corner stars + eyebrow to reveal the
-      //     Hero, but leave the petals layer fully opaque so they keep
-      //     tumbling over the Hero until they exit the screen.
+      // 10. Reveal beat. Unlock scrolling, re-anchor the overlay to the
+      //     document, and start the Hero's entrance — all in one frame.
+      tl.call(release, [], "+=0.3");
+
+      //     Cross-fade the chrome away. The card goes with it now: it's
+      //     pixel-matched to the Hero's window, and the Hero keeps its own
+      //     window + names visible throughout, so this is invisible. Once
+      //     the reader can scroll, a leftover card would only drift out of
+      //     register on resize. The petals layer stays fully opaque so the
+      //     petals keep tumbling over the Hero until they exit.
       tl.to(
-        [".il-reveal", bgRef.current],
+        [".il-reveal", bgRef.current, cardRef.current],
         { autoAlpha: 0, duration: 0.5, ease: "power2.inOut" },
-        "+=0.3"
+        "<"
       );
 
-      // 11. Hold while the last petals fall past the viewport edge. The
-      //     petal sub-timelines peak around 3.4s from launch — this hold
-      //     sits on top of the bg fade to cover that full window.
+      // 11. Hold while the last petals fall past the bottom of the Hero.
+      //     The petal sub-timelines peak around 3.4s from launch — this
+      //     hold sits on top of the fade to cover that full window. The
+      //     overlay is transparent and click-through by now, so this
+      //     costs the reader nothing.
       tl.to({}, { duration: 3.0 });
     }, rootRef);
 
     return () => {
       window.clearTimeout(lenisTimer);
-      document.documentElement.style.overflow = prevHtmlOverflow;
-      document.body.style.overflow = prevBodyOverflow;
-      getLenis()?.start();
+      release();
       ctx.revert();
     };
   }, [hidden]);

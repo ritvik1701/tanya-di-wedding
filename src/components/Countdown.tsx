@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { AnimatePresence, motion } from "framer-motion";
-import { getNextEvent, wedding } from "@/config/wedding";
+import { wedding } from "@/config/wedding";
 
 type TimeParts = { days: number; hours: number; minutes: number; seconds: number };
 
@@ -65,21 +65,16 @@ const DAY = (d: Date) => d.getDate();
 
 export default function Countdown() {
   const root = useRef<HTMLDivElement>(null);
-  const [target] = useState(() => {
-    const next = getNextEvent();
-    return {
-      date: next?.date ?? wedding.date,
-      label: next?.name ?? "The Wedding",
-    };
-  });
-  const [t, setT] = useState<TimeParts>(() => diffParts(target.date, new Date()));
+  const [t, setT] = useState<TimeParts>(() =>
+    diffParts(wedding.date, new Date()),
+  );
 
   useEffect(() => {
     const i = window.setInterval(() => {
-      setT(diffParts(target.date, new Date()));
+      setT(diffParts(wedding.date, new Date()));
     }, 1000);
     return () => window.clearInterval(i);
-  }, [target.date]);
+  }, []);
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
@@ -125,17 +120,18 @@ export default function Countdown() {
           · Save the date ·
         </p>
 
-        {/* Event name — secondary, caps */}
+        {/* Event name */}
         <h2
-          className="cd-reveal mt-3 text-lg uppercase sm:mt-4 sm:text-xl md:text-2xl"
+          className="cd-reveal mt-3 sm:mt-4"
+          lang="hi"
           style={{
-            fontFamily: "var(--font-display)",
+            fontFamily: "var(--font-hindi)",
             color: "#9d4130",
-            letterSpacing: "0.35em",
-            fontWeight: 600,
+            fontSize: "clamp(1.9rem, 6vw, 3.4rem)",
+            lineHeight: 1.1,
           }}
         >
-          {target.label}
+          शुभ विवाह
         </h2>
 
         {/* Big date — centerpiece, flanked by gena phool (no frame here) */}
@@ -158,7 +154,7 @@ export default function Countdown() {
                 fontWeight: 600,
               }}
             >
-              {WEEKDAY(target.date)}
+              {WEEKDAY(wedding.date)}
             </span>
             <span
               className="mt-3 block leading-none sm:mt-4"
@@ -171,7 +167,7 @@ export default function Countdown() {
                 lineHeight: 1,
               }}
             >
-              {DAY(target.date)}
+              {DAY(wedding.date)}
             </span>
             <span
               className="mt-3 uppercase sm:mt-4 text-sm sm:text-base md:text-xl"
@@ -182,7 +178,7 @@ export default function Countdown() {
                 fontWeight: 600,
               }}
             >
-              {MONTH_YEAR(target.date)}
+              {MONTH_YEAR(wedding.date)}
             </span>
           </div>
 
@@ -253,7 +249,7 @@ export default function Countdown() {
           className="cd-reveal mt-10 max-w-xl px-4 text-center text-base leading-relaxed sm:mt-12 sm:text-lg md:mt-14 md:text-xl"
           style={{ color: "#2a1a15" }}
         >
-          Until the first of many joyful moments.
+          Until the day we&apos;ve all been waiting for.
         </p>
       </div>
     </section>

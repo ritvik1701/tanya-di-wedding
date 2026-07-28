@@ -3,7 +3,6 @@ import Shlok from "@/components/Shlok";
 import Countdown from "@/components/Countdown";
 import Timeline from "@/components/Timeline";
 import OurStory from "@/components/OurStory";
-import Family from "@/components/Family";
 import SectionDivider from "@/components/SectionDivider";
 
 export default function Page() {
@@ -16,8 +15,6 @@ export default function Page() {
       <SectionDivider direction="right" />
       <Timeline />
       <SectionDivider />
-      <Family />
-      <SectionDivider direction="right" />
       <OurStory />
       <footer className="px-6 py-16 text-center">
         <p

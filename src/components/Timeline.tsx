@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { events, type WeddingEvent } from "@/config/wedding";
 import EventIcon from "./EventIcon";
-import ThemeMotif from "./ThemeMotif";
 import { getLenis } from "./SmoothScroll";
 import ContactsModal from "./ContactsModal";
 
@@ -42,18 +41,6 @@ const EVENT_HI: Record<string, string> = {
   mehendi: "मेहंदी",
   sangeet: "संगीत",
   wedding: "विवाह",
-};
-
-// Per-event theme — `color` drives the motif + accent visuals, `name`
-// is the human-readable palette label shown in "we celebrate in …".
-const EVENT_THEMES: Record<
-  string,
-  { color: string; accent: string; name: string }
-> = {
-  haldi: { color: "#b994c6", accent: "#d8bfe2", name: "lilac" },
-  mehendi: { color: "#8aa36a", accent: "#bcd08f", name: "henna green" },
-  sangeet: { color: "#8a6bb3", accent: "#e6b22b", name: "indigo" },
-  wedding: { color: "#d8525c", accent: "#c9a35d", name: "crimson" },
 };
 
 export default function Timeline() {
@@ -190,11 +177,6 @@ export default function Timeline() {
           const bgImage = EVENT_BG_IMAGES[ev.id];
           const bgColor = EVENT_BG_FALLBACK[ev.id] ?? "#f0e4cc";
           const hi = EVENT_HI[ev.id] ?? ev.name;
-          const theme = EVENT_THEMES[ev.id] ?? {
-            color: FG_TITLE,
-            accent: FG_TITLE,
-            name: "",
-          };
           return (
             <section
               key={ev.id}
@@ -259,34 +241,6 @@ export default function Timeline() {
                 >
                   {ev.name}
                 </span>
-
-                {/* Theme motif + dress-code caption — the ornament and
-                    "· WE CELEBRATE IN … ·" label together communicate
-                    the event's palette as a guest cue. Responsive size
-                    so the motif reads prominently on larger viewports. */}
-                <div className="mt-6 flex items-center gap-4 sm:mt-7 sm:gap-5">
-                  <span
-                    className="block shrink-0"
-                    style={{
-                      width: "clamp(72px, 10vw, 96px)",
-                      height: "clamp(72px, 10vw, 96px)",
-                    }}
-                  >
-                    <ThemeMotif color={theme.color} size="100%" />
-                  </span>
-                  <span
-                    className="flex flex-col gap-y-0.5 text-xs uppercase sm:flex-row sm:gap-x-2 sm:text-sm md:text-base"
-                    style={{
-                      fontFamily: "var(--font-display)",
-                      color: FG_LABEL,
-                      letterSpacing: "0.3em",
-                      fontWeight: 600,
-                    }}
-                  >
-                    <span>We celebrate</span>
-                    <span>in {theme.name}</span>
-                  </span>
-                </div>
 
                 <p
                   className="mt-6 max-w-2xl text-base leading-relaxed sm:mt-8 sm:text-lg md:text-xl lg:text-2xl"

@@ -82,9 +82,12 @@ export default function Hero() {
         )
         .to(".hero-date", { autoAlpha: 1, y: 0, duration: 0.6 }, 0.65);
 
-      // Wait for the intro letter to finish before playing. Fallback: if no
-      // event arrives within 4s (e.g. in dev when the intro was dismissed),
-      // play anyway so the hero isn't stuck invisible.
+      // Wait for the intro letter's reveal beat before playing. It fires
+      // `th:hero-reveal` around 5.3s in, as its background starts fading,
+      // so this entrance plays into view rather than behind the overlay.
+      // Fallback: if no event arrives (e.g. in dev when the intro was
+      // dismissed), play anyway so the hero isn't stuck invisible. It must
+      // stay comfortably later than that 5.3s beat or it pre-empts it.
       let played = false;
       const play = () => {
         if (played) return;
@@ -92,7 +95,7 @@ export default function Hero() {
         tl.play();
       };
       window.addEventListener("th:hero-reveal", play, { once: true });
-      const fallback = window.setTimeout(play, 4000);
+      const fallback = window.setTimeout(play, 7000);
 
       return () => {
         window.removeEventListener("th:hero-reveal", play);
