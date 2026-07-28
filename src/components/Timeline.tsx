@@ -213,13 +213,19 @@ export default function Timeline() {
 
                 {/* Hindi name (primary) */}
                 <span
-                  className="mt-3 block leading-none sm:mt-4"
+                  className="mt-3 block sm:mt-4"
                   lang="hi"
                   style={{
                     fontFamily: "var(--font-hindi)",
                     color: FG_TITLE,
-                    fontSize: "clamp(3rem, 12vw, 10rem)",
-                    lineHeight: 1,
+                    // Sized so the longest name, मेहंदी और संगीत at
+                    // 6.47em wide, stays on one line from 320px up to
+                    // the 896px container cap. Wrapping it is what
+                    // pushed the card past the fold.
+                    fontSize: "clamp(2.5rem, 11vw, 8.5rem)",
+                    // Yatra One's ascent+descent is 1.48em, so Devanagari
+                    // matras collide at anything tighter than this.
+                    lineHeight: 1.5,
                   }}
                 >
                   {hi}
@@ -328,7 +334,7 @@ function EventButton({
   ariaLabel,
 }: EventButtonProps) {
   const className =
-    "tl-action-btn group inline-flex items-center gap-2 border px-4 py-2.5 text-[11px] uppercase sm:gap-2.5 sm:px-5 sm:py-3 sm:text-xs";
+    "tl-action-btn group inline-flex min-h-[44px] items-center gap-2 border px-5 py-3 text-xs uppercase sm:gap-2.5 sm:text-xs";
   const style: React.CSSProperties = {
     letterSpacing: "0.22em",
     fontFamily: "var(--font-display)",

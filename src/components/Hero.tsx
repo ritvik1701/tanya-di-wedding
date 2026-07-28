@@ -194,7 +194,7 @@ export default function Hero() {
                 style={{
                   fontFamily: "var(--font-hindi)",
                   color: "#9d4130",
-                  fontSize: "clamp(2.4rem, 8vw, 6.5rem)",
+                  fontSize: "clamp(2.4rem, min(8vw, 12svh), 6.5rem)",
                   lineHeight: 1,
                   whiteSpace: "nowrap",
                 }}
@@ -218,7 +218,7 @@ export default function Hero() {
                 style={{
                   fontFamily: "var(--font-display)",
                   color: "#ab1b23",
-                  fontSize: "clamp(1.4rem, 3.5vw, 2.8rem)",
+                  fontSize: "clamp(1.2rem, min(3.5vw, 4.5svh), 2.8rem)",
                   lineHeight: 1,
                   fontWeight: 400,
                 }}
@@ -232,7 +232,7 @@ export default function Hero() {
                 style={{
                   fontFamily: "var(--font-hindi)",
                   color: "#9d4130",
-                  fontSize: "clamp(2.4rem, 8vw, 6.5rem)",
+                  fontSize: "clamp(2.4rem, min(8vw, 12svh), 6.5rem)",
                   lineHeight: 1,
                   whiteSpace: "nowrap",
                 }}

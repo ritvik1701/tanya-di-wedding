@@ -35,13 +35,13 @@ export default function EventIcon({
         </svg>
       );
 
-    // Sagan — two interlocking rings
+    // Sagan — a ring with a solitaire
     case "sagan":
       return (
         <svg {...common}>
-          <circle cx="12.5" cy="17" r="6.5" />
-          <circle cx="19.5" cy="17" r="6.5" />
-          <line x1="16" y1="6" x2="16" y2="8.5" />
+          <circle cx="16" cy="20" r="7.5" />
+          <path d="M 12 12 L 16 7 L 20 12 L 16 16.5 Z" />
+          <line x1="12" y1="12" x2="20" y2="12" />
         </svg>
       );
 
