@@ -4,94 +4,96 @@ export const wedding = {
   bride: "Tanya",
   groom: "Hemabh",
   // Main wedding date, in IST. This is what the countdown ticks down to.
-  date: new Date("2026-08-25T17:00:00+05:30"),
-  location: "TBD",
+  date: new Date("2026-08-25T20:00:00+05:30"),
+  location: "Krishna Greens, Pushpanjali Farms, New Delhi",
 };
 
-// A point of contact for an event — name, relation/role, and a phone
-// number. Phones render as tel: links in the modal.
-export type Contact = {
-  name: string;
-  role: string;
-  phone: string;
-};
-
-// Timeline of events. Dates are placeholders until confirmed.
+// Timeline of events. Details taken from the printed invitation cards.
 export type WeddingEvent = {
   id: string;
   name: string;
   date: Date;
   time: string;
+  // Short venue name, shown as the headline. `address` is the full street
+  // address, shown beneath it. Display only — the map link is a real pin,
+  // not a search on this text.
   venue: string;
+  address: string;
   description: string;
   motif: string; // emoji/placeholder for a visual motif later
-  // Google Maps (or similar) link opened by the Directions button. Leave
-  // undefined while the venue is TBD — the button shows a disabled state.
+  // Google Maps pin opened by the Directions button. Shared from Maps
+  // itself, so it resolves to the exact venue rather than a name search.
   directionsUrl?: string;
-  // People guests can call for help with this specific event.
-  contacts: Contact[];
+};
+
+const ELDECO = {
+  address: "Eldeco Mansionz, Sector 48, Gurugram",
+  pin: "https://maps.app.goo.gl/dRSNgZFg8bsiwNm57",
 };
 
 export const events: WeddingEvent[] = [
   {
+    id: "kirtan",
+    name: "Kirtan Ceremony",
+    date: new Date("2026-08-15T16:30:00+05:30"),
+    time: "4:30 PM - 5:30 PM",
+    venue: "Chinmaya Gurudham",
+    address:
+      "W Block, Plot No-01, Woodstock Ave, Nirvana Country, Sector 50, Gurugram",
+    description:
+      "An evening of prayers to kick things off. Bless us with your presence!",
+    motif: "ॐ",
+    directionsUrl: "https://maps.app.goo.gl/47jpNHcUv8W9chgy8",
+  },
+  {
+    id: "sagan",
+    name: "Sagan & Ring Ceremony",
+    date: new Date("2026-08-23T18:00:00+05:30"),
+    time: "6:00 PM onwards",
+    venue: "Golden Apple",
+    address: "Twin District Center, Near Crown Plaza, Sector-10, Rohini-110085",
+    description:
+      "Rings exchanged and blessings given, as the two families make it official.",
+    motif: "◈",
+    directionsUrl: "https://maps.app.goo.gl/Y6HV2mA83ey96FDc8",
+  },
+  {
+    id: "mehendi-sangeet",
+    name: "Mehendi & Sangeet",
+    date: new Date("2026-08-24T18:00:00+05:30"),
+    time: "6:00 PM onwards",
+    venue: "Eldeco Mansionz Community Center",
+    address: ELDECO.address,
+    description: "Come for the henna, stay for the dancing!",
+    motif: "✿",
+    directionsUrl: ELDECO.pin,
+  },
+  {
     id: "haldi",
     name: "Haldi",
-    date: new Date("2026-08-23T10:00:00+05:30"),
-    time: "10:00 AM onwards",
-    venue: "TBD",
-    description:
-      "A sun-soaked morning of turmeric blessings, laughter, and the scent of marigolds.",
+    date: new Date("2026-08-25T08:00:00+05:30"),
+    time: "8:00 AM onwards",
+    venue: "Eldeco Mansionz Community Center",
+    address: ELDECO.address,
+    description: "Join us for a morning of yellow glow!",
     motif: "☀",
-    contacts: [
-      { name: "[Name]", role: "Bride's Uncle", phone: "+91 00000 00000" },
-      { name: "[Name]", role: "Groom's Cousin", phone: "+91 00000 00000" },
-    ],
-  },
-  {
-    id: "mehendi",
-    name: "Mehendi",
-    date: new Date("2026-08-23T17:00:00+05:30"),
-    time: "5:00 PM onwards",
-    venue: "TBD",
-    description:
-      "Henna, music, and stories traced in vine and petal across the bride's hands.",
-    motif: "✿",
-    contacts: [
-      { name: "[Name]", role: "Bride's Aunt", phone: "+91 00000 00000" },
-      { name: "[Name]", role: "Groom's Sister", phone: "+91 00000 00000" },
-    ],
-  },
-  {
-    id: "sangeet",
-    name: "Sangeet",
-    date: new Date("2026-08-24T19:00:00+05:30"),
-    time: "7:00 PM onwards",
-    venue: "TBD",
-    description:
-      "A night of song and dance — the families come together in celebration.",
-    motif: "♪",
-    contacts: [
-      { name: "[Name]", role: "Event Coordinator", phone: "+91 00000 00000" },
-      { name: "[Name]", role: "Family Host", phone: "+91 00000 00000" },
-    ],
+    directionsUrl: ELDECO.pin,
   },
   {
     id: "wedding",
-    name: "The Wedding",
-    date: new Date("2026-08-25T18:00:00+05:30"),
-    time: "6:00 PM onwards",
-    venue: "TBD",
+    name: "Wedding Ceremony",
+    date: new Date("2026-08-25T20:00:00+05:30"),
+    time: "8:00 PM onwards",
+    venue: "Krishna Greens",
+    address: "Block H-1, Dwarka Link Rd, Pushpanjali Farms, New Delhi",
     description:
       "Around the sacred fire, two families become one. The main event.",
     motif: "❉",
-    contacts: [
-      { name: "[Name]", role: "Bride's Brother", phone: "+91 00000 00000" },
-      { name: "[Name]", role: "Groom's Brother", phone: "+91 00000 00000" },
-    ],
+    directionsUrl: "https://maps.app.goo.gl/So1mDa5rtb5hpyQS8",
   },
 ];
 
-// Helper: the "next" upcoming event (used by the countdown).
+// Helper: the "next" upcoming event.
 export function getNextEvent(now: Date = new Date()): WeddingEvent | null {
   const upcoming = events.filter((e) => e.date.getTime() > now.getTime());
   if (upcoming.length === 0) return null;

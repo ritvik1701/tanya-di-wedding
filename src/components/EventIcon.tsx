@@ -25,6 +25,26 @@ export default function EventIcon({
   };
 
   switch (id) {
+    // Kirtan — lotus (an evening of prayers)
+    case "kirtan":
+      return (
+        <svg {...common}>
+          <path d="M 16 27 C 11 20, 11 12, 16 7 C 21 12, 21 20, 16 27 Z" />
+          <path d="M 16 27 C 8 23, 5 16, 6 11 C 12 13, 15 20, 16 27 Z" />
+          <path d="M 16 27 C 24 23, 27 16, 26 11 C 20 13, 17 20, 16 27 Z" />
+        </svg>
+      );
+
+    // Sagan — two interlocking rings
+    case "sagan":
+      return (
+        <svg {...common}>
+          <circle cx="12.5" cy="17" r="6.5" />
+          <circle cx="19.5" cy="17" r="6.5" />
+          <line x1="16" y1="6" x2="16" y2="8.5" />
+        </svg>
+      );
+
     // Haldi — sun with radiating rays
     case "haldi":
       return (
@@ -41,8 +61,9 @@ export default function EventIcon({
         </svg>
       );
 
-    // Mehendi — paisley / leaf
+    // Mehendi — paisley / leaf. Also used for the combined Mehendi & Sangeet.
     case "mehendi":
+    case "mehendi-sangeet":
       return (
         <svg {...common}>
           <path d="M 10 24 C 4 18, 8 8, 16 6 C 24 8, 26 16, 20 22 C 16 26, 12 26, 10 24 Z" />

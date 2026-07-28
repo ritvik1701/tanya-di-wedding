@@ -1,10 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { events, type WeddingEvent } from "@/config/wedding";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { events } from "@/config/wedding";
 import EventIcon from "./EventIcon";
 import { getLenis } from "./SmoothScroll";
-import ContactsModal from "./ContactsModal";
 
 const formatDate = (d: Date) =>
   d.toLocaleDateString("en-GB", {
@@ -13,18 +12,20 @@ const formatDate = (d: Date) =>
     month: "long",
   });
 
-// Background images per event. Sangeet doesn't have one yet — fall back
-// to a placeholder colour.
+// Background images per event. Kirtan and Sagan have no photo yet — they
+// fall back to a placeholder colour.
 const EVENT_BG_IMAGES: Record<string, string | null> = {
+  kirtan: null,
+  sagan: null,
+  "mehendi-sangeet": "/assets/backgrounds/mehendi.jpg",
   haldi: "/assets/backgrounds/haldi.jpg",
-  mehendi: "/assets/backgrounds/mehendi.jpg",
-  sangeet: null,
   wedding: "/assets/backgrounds/wedding.jpg",
 };
 const EVENT_BG_FALLBACK: Record<string, string> = {
+  kirtan: "#8a6bb3",
+  sagan: "#b77aa2",
+  "mehendi-sangeet": "#8ba15a",
   haldi: "#f4c15b",
-  mehendi: "#8ba15a",
-  sangeet: "#b77aa2",
   wedding: "#c74a2b",
 };
 
@@ -37,9 +38,10 @@ const FG_LABEL = "#e8dbb4";
 // Hindi translations for each event — displayed large, with the English
 // name as a smaller caps subtitle underneath (matching the hero treatment).
 const EVENT_HI: Record<string, string> = {
+  kirtan: "कीर्तन",
+  sagan: "सगन",
+  "mehendi-sangeet": "मेहंदी और संगीत",
   haldi: "हल्दी",
-  mehendi: "मेहंदी",
-  sangeet: "संगीत",
   wedding: "विवाह",
 };
 
@@ -51,12 +53,6 @@ export default function Timeline() {
   const [active, setActive] = useState(0);
   const [visible, setVisible] = useState(false);
 
-  // Which event's contacts modal is open (null = closed)
-  const [openEventId, setOpenEventId] = useState<string | null>(null);
-  const openEvent = useMemo<WeddingEvent | null>(
-    () => events.find((e) => e.id === openEventId) ?? null,
-    [openEventId]
-  );
 
   // Track which event section is currently in view so the sidebar dot
   // highlights as we scroll through the slide deck.
@@ -259,8 +255,14 @@ export default function Timeline() {
                 >
                   Venue · {ev.venue}
                 </p>
+                <p
+                  className="mt-2 max-w-md text-sm leading-relaxed sm:text-base"
+                  style={{ color: FG_BODY, opacity: 0.85 }}
+                >
+                  {ev.address}
+                </p>
 
-                {/* Action buttons: directions + points of contact */}
+                {/* Action button: directions */}
                 <div className="mt-6 flex flex-wrap gap-3 sm:mt-8 sm:gap-4">
                   <EventButton
                     as={ev.directionsUrl ? "a" : "button"}
@@ -296,50 +298,12 @@ export default function Timeline() {
                     </svg>
                     Directions
                   </EventButton>
-                  <EventButton
-                    as="button"
-                    onClick={() => setOpenEventId(ev.id)}
-                    ariaLabel={`View points of contact for ${ev.name}`}
-                  >
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      aria-hidden
-                    >
-                      <path
-                        d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <circle
-                        cx="9"
-                        cy="7"
-                        r="4"
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                      />
-                      <path
-                        d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    Points of Contact
-                  </EventButton>
                 </div>
               </div>
             </section>
           );
         })}
       </div>
-
-      <ContactsModal event={openEvent} onClose={() => setOpenEventId(null)} />
     </section>
   );
 }
