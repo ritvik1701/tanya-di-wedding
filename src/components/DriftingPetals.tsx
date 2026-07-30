@@ -57,10 +57,10 @@ function petalDefs(seedOffset: number): PetalDef[] {
       color: PETAL_COLORS[(i + seedOffset) % PETAL_COLORS.length],
       size: 10 + r1 * 10,
       leftPct: 4 + r2 * 92,
-      duration: 16 + r3 * 10,
+      duration: 10 + r3 * 6,
       // Negative delay starts each petal already mid-fall, so the layer
       // never opens with every petal synchronised at the top.
-      delay: -(r1 * 24 + r4 * 4),
+      delay: -(r1 * 10 + r4 * 2),
       drift: (r4 - 0.5) * 60,
       rotation: 180 + r2 * 360,
     };

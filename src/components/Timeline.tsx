@@ -87,7 +87,7 @@ const EVENT_TEXT_BAND: Record<string, { top: number; bottom: number }> = {
   // dark silhouette). Tightest of the five: the clear corridor between
   // the ring and the couple is only ~40% of the card, barely enough at
   // full type size even with the block's spacing trimmed down.
-  sagan: { top: 17, bottom: 57 },
+  sagan: { top: 18, bottom: 58 },
   // Night photograph — dark sky only, no couple. Centred low enough that
   // the block doesn't spill above the card's own top edge; the bottom of
   // the block does run into the string-light clutter, which is exactly
@@ -386,7 +386,7 @@ export default function Timeline() {
                         fontWeight: 600,
                         fontSize:
                           "clamp(0.74rem, calc(var(--cw) * 0.036), 1.1rem)",
-                        marginTop: "calc(var(--cw) * 0.005)",
+                        marginTop: "calc(var(--cw) * 0.006)",
                       }}
                     >
                       {ev.time}
@@ -402,11 +402,11 @@ export default function Timeline() {
                         // ~9% of the card width puts the longest name,
                         // मेहंदी और संगीत at 6.47em, at ~58% of the card.
                         fontSize:
-                          "clamp(1.45rem, calc(var(--cw) * 0.074), 3.9rem)",
+                          "clamp(1.6rem, calc(var(--cw) * 0.082), 4.3rem)",
                         // Yatra One's ascent+descent is 1.48em, so
                         // Devanagari matras collide below this.
                         lineHeight: 1.5,
-                        marginTop: "calc(var(--cw) * 0.012)",
+                        marginTop: "calc(var(--cw) * 0.014)",
                       }}
                     >
                       {hi}
@@ -421,7 +421,7 @@ export default function Timeline() {
                         letterSpacing: "0.4em",
                         fontWeight: 600,
                         fontSize:
-                          "clamp(0.64rem, calc(var(--cw) * 0.027), 0.95rem)",
+                          "clamp(0.74rem, calc(var(--cw) * 0.032), 1.1rem)",
                         // Trailing tracking on the last glyph otherwise
                         // reads as an off-centre block.
                         textIndent: "0.4em",
@@ -435,8 +435,8 @@ export default function Timeline() {
                       style={{
                         color: tone.body,
                         fontSize:
-                          "clamp(0.86rem, calc(var(--cw) * 0.034), 1.25rem)",
-                        marginTop: "calc(var(--cw) * 0.018)",
+                          "clamp(0.9rem, calc(var(--cw) * 0.037), 1.35rem)",
+                        marginTop: "calc(var(--cw) * 0.02)",
                         maxWidth: "34ch",
                       }}
                     >
@@ -450,24 +450,11 @@ export default function Timeline() {
                         letterSpacing: "0.18em",
                         fontWeight: 600,
                         fontSize:
-                          "clamp(0.7rem, calc(var(--cw) * 0.03), 1.02rem)",
-                        marginTop: "calc(var(--cw) * 0.018)",
+                          "clamp(0.85rem, calc(var(--cw) * 0.036), 1.25rem)",
+                        marginTop: "calc(var(--cw) * 0.02)",
                       }}
                     >
                       Venue · {ev.venue}
-                    </p>
-                    <p
-                      className="leading-relaxed"
-                      style={{
-                        color: tone.body,
-                        opacity: 0.85,
-                        fontSize:
-                          "clamp(0.68rem, calc(var(--cw) * 0.028), 0.92rem)",
-                        marginTop: "calc(var(--cw) * 0.006)",
-                        maxWidth: "34ch",
-                      }}
-                    >
-                      {ev.address}
                     </p>
 
                     {/* Directions is the last element of the same centred
