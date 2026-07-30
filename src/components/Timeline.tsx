@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { events } from "@/config/wedding";
+import DriftingPetals from "./DriftingPetals";
 import EventIcon from "./EventIcon";
+import Fireworks from "./Fireworks";
 import { getLenis } from "./SmoothScroll";
 
 const formatDate = (d: Date) =>
@@ -82,10 +84,10 @@ const EVENT_TEXT_BAND: Record<string, { top: number; bottom: number }> = {
   // Ring + chandeliers clear by ~28%; couple's hair actually starts at a
   // precisely measured 69% (not the ~48% the artwork first suggested —
   // most of what looks like "couple" below that is pale clothing, not
-  // dark silhouette). This is the tightest of the five: the clear
-  // corridor between the ring and the couple is only ~40% of the card,
-  // which is why this card also carries the strongest type-scale-down.
-  sagan: { top: 19, bottom: 59 },
+  // dark silhouette). Tightest of the five: the clear corridor between
+  // the ring and the couple is only ~40% of the card, barely enough at
+  // full type size even with the block's spacing trimmed down.
+  sagan: { top: 17, bottom: 57 },
   // Night photograph — dark sky only, no couple. Centred low enough that
   // the block doesn't spill above the card's own top edge; the bottom of
   // the block does run into the string-light clutter, which is exactly
@@ -110,18 +112,6 @@ const bandStyle = (band: { top: number; bottom: number }) => ({
   bottom: `${100 - band.bottom}%`,
 });
 
-// Every size in the block is a fraction of --cw, so one number per event
-// scales the whole thing. Kirtan, Sagan and Wedding have a couple low
-// enough in the frame that the full-size block (now taller, with date
-// and time on separate lines) doesn't fit above it; Haldi and Sangeet
-// have no couple to clear and stay at full size.
-const EVENT_TYPE_SCALE: Record<string, number> = {
-  kirtan: 0.84,
-  sagan: 0.73,
-  wedding: 0.85,
-};
-
-const scaleOf = (id: string) => EVENT_TYPE_SCALE[id] ?? 1;
 
 // Hindi translations for each event — displayed large, with the English
 // name as a smaller caps subtitle underneath (matching the hero treatment).
@@ -268,7 +258,7 @@ export default function Timeline() {
           </div>
         </nav>
 
-        {events.map((ev) => {
+        {events.map((ev, i) => {
           const bgImage = EVENT_BG_IMAGES[ev.id];
           const bgColor = EVENT_BG_FALLBACK[ev.id] ?? "#f0e4cc";
           const tone = toneOf(ev.id);
@@ -278,7 +268,20 @@ export default function Timeline() {
             <section
               key={ev.id}
               className="sticky top-0 h-[100svh] overflow-hidden"
-              style={{ backgroundColor: bgColor }}
+              style={{
+                backgroundColor: bgColor,
+                // All five cards stay mounted the whole time (sticky
+                // stacking, not scroll-unmount), so without this every
+                // firework/petal animation on every card runs constantly
+                // regardless of which one is actually on screen — this
+                // was the real source of the lag. content-visibility
+                // skips rendering (and effectively pauses animation
+                // work) for whichever cards aren't near the viewport;
+                // contain-intrinsic-size keeps their layout size known
+                // so scroll position doesn't jump when they're skipped.
+                contentVisibility: "auto",
+                containIntrinsicSize: "100vw 100svh",
+              }}
             >
               {/* Blurred backdrop — the same artwork, blown past the
                   edges and blurred, so the bands the card can't reach
@@ -299,6 +302,14 @@ export default function Timeline() {
                 />
               )}
 
+              {/* Top band: an occasional multicolour firework burst.
+                  Bottom band: petals drifting continuously — a calmer,
+                  looping cousin of the intro's one-time burst, so the
+                  blur never reads as dead space without repeating that
+                  reveal moment. */}
+              <Fireworks seedOffset={i} />
+              <DriftingPetals seedOffset={i} />
+
               {/* The card itself — always whole, never cropped. */}
               <div className="relative flex h-full items-center justify-center">
                 <div
@@ -309,8 +320,13 @@ export default function Timeline() {
                       // width-driven on narrow ones, so its width is
                       // min(100vw, 100svh × 1410/2000). Every size below
                       // is a fraction of that, which keeps the type
-                      // seated inside the artwork at any viewport.
-                      "--cw": `calc(min(100vw, 70.5svh) * ${scaleOf(ev.id)})`,
+                      // seated inside the artwork at any viewport — and
+                      // the same fraction on every card, so every font
+                      // size is identical across all five. Where a card
+                      // needs to fit a tighter clear band, that's handled
+                      // by the band's position and the block's spacing,
+                      // never by shrinking its type relative to the rest.
+                      "--cw": "min(100vw, 70.5svh)",
                       boxShadow: "0 1.5rem 4rem rgba(26, 12, 2, 0.32)",
                     } as React.CSSProperties
                   }
@@ -339,7 +355,7 @@ export default function Timeline() {
                         color: tone.title,
                         width: "calc(var(--cw) * 0.09)",
                         height: "calc(var(--cw) * 0.09)",
-                        marginBottom: "calc(var(--cw) * 0.018)",
+                        marginBottom: "calc(var(--cw) * 0.012)",
                       }}
                     >
                       <EventIcon id={ev.id} size={96} color={tone.title} />
@@ -370,7 +386,7 @@ export default function Timeline() {
                         fontWeight: 600,
                         fontSize:
                           "clamp(0.74rem, calc(var(--cw) * 0.036), 1.1rem)",
-                        marginTop: "calc(var(--cw) * 0.008)",
+                        marginTop: "calc(var(--cw) * 0.005)",
                       }}
                     >
                       {ev.time}
@@ -390,7 +406,7 @@ export default function Timeline() {
                         // Yatra One's ascent+descent is 1.48em, so
                         // Devanagari matras collide below this.
                         lineHeight: 1.5,
-                        marginTop: "calc(var(--cw) * 0.02)",
+                        marginTop: "calc(var(--cw) * 0.012)",
                       }}
                     >
                       {hi}
@@ -420,7 +436,7 @@ export default function Timeline() {
                         color: tone.body,
                         fontSize:
                           "clamp(0.86rem, calc(var(--cw) * 0.034), 1.25rem)",
-                        marginTop: "calc(var(--cw) * 0.028)",
+                        marginTop: "calc(var(--cw) * 0.018)",
                         maxWidth: "34ch",
                       }}
                     >
@@ -435,7 +451,7 @@ export default function Timeline() {
                         fontWeight: 600,
                         fontSize:
                           "clamp(0.7rem, calc(var(--cw) * 0.03), 1.02rem)",
-                        marginTop: "calc(var(--cw) * 0.028)",
+                        marginTop: "calc(var(--cw) * 0.018)",
                       }}
                     >
                       Venue · {ev.venue}
@@ -447,7 +463,7 @@ export default function Timeline() {
                         opacity: 0.85,
                         fontSize:
                           "clamp(0.68rem, calc(var(--cw) * 0.028), 0.92rem)",
-                        marginTop: "calc(var(--cw) * 0.01)",
+                        marginTop: "calc(var(--cw) * 0.006)",
                         maxWidth: "34ch",
                       }}
                     >
@@ -462,7 +478,7 @@ export default function Timeline() {
                         actually stays off the photo. */}
                     <div
                       className="flex flex-wrap justify-center gap-3"
-                      style={{ marginTop: "calc(var(--cw) * 0.03)" }}
+                      style={{ marginTop: "calc(var(--cw) * 0.02)" }}
                     >
                       <EventButton
                         as={ev.directionsUrl ? "a" : "button"}
