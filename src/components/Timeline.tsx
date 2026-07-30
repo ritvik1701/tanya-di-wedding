@@ -19,11 +19,11 @@ const formatDate = (d: Date) =>
 // the image to the bottom: a centred cover crops the couple out entirely
 // on wide screens.
 const EVENT_BG_IMAGES: Record<string, string | null> = {
-  kirtan: "/assets/backgrounds/kirtan-vertical.jpg",
-  sagan: "/assets/backgrounds/ring-ceremony-vertical.jpg",
-  "mehendi-sangeet": "/assets/backgrounds/sangeet-vertical.jpg",
-  haldi: "/assets/backgrounds/haldi-vertical.jpg",
-  wedding: "/assets/backgrounds/wedding-vertical.jpg",
+  kirtan: "/assets/backgrounds/kirtan-vertical-v2.jpg",
+  sagan: "/assets/backgrounds/ring-ceremony-vertical-v2.jpg",
+  "mehendi-sangeet": "/assets/backgrounds/sangeet-vertical-v2.jpg",
+  haldi: "/assets/backgrounds/haldi-vertical-v2.jpg",
+  wedding: "/assets/backgrounds/wedding-vertical-v2.jpg",
 };
 
 // Flat colour showing behind each image while it loads.
