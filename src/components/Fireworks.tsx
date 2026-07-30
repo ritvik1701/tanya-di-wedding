@@ -69,7 +69,7 @@ function emitterDefs(seedOffset: number): EmitterDef[] {
     const r5 = rand(seed + 5);
     const count = 5 + Math.floor(r4 * 4); // 5-8 sparks
     const spread = 22 + r5 * 34; // small pops to wide blooms
-    const duration = 1.8 + r3 * 2.0; // 1.8s-3.8s — periods differ enough
+    const duration = 1.0 + r3 * 1.0; // 1-2s — periods differ enough
     // that emitters drift in and out of phase rather than always firing
     // in lockstep, which is what actually produces overlapping bursts.
     return {
