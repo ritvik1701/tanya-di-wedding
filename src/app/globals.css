@@ -53,11 +53,15 @@ html.lenis body {
   color: #f0e4cc;
 }
 
-/* Timeline event action buttons — cream outlined, invert on hover */
+/* Timeline event action buttons — frosted panel over the artwork, so the
+   illustration reads through it blurred instead of the label fighting
+   whatever detail happens to sit behind it. Inverts to solid on hover. */
 .tl-action-btn {
   border-color: #fff4e0;
   color: #fff4e0;
-  background-color: transparent;
+  background-color: rgba(26, 12, 2, 0.3);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  backdrop-filter: blur(12px) saturate(1.4);
   transition:
     background-color 180ms ease,
     color 180ms ease,
@@ -67,6 +71,17 @@ html.lenis body {
   background-color: #fff4e0;
   color: #2a1a15;
 }
+/* Variant for cards whose artwork is light — cream would vanish there. */
+.tl-action-btn--ink {
+  border-color: #9d4130;
+  color: #9d4130;
+  background-color: rgba(240, 228, 204, 0.55);
+}
+.tl-action-btn--ink:hover:not(:disabled):not([aria-disabled="true"]) {
+  background-color: #9d4130;
+  color: #fff4e0;
+}
+
 .tl-action-btn:disabled,
 .tl-action-btn[aria-disabled="true"] {
   opacity: 0.45;

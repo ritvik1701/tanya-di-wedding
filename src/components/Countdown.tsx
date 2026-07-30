@@ -65,14 +65,20 @@ const DAY = (d: Date) => d.getDate();
 
 export default function Countdown() {
   const root = useRef<HTMLDivElement>(null);
-  const [t, setT] = useState<TimeParts>(() =>
-    diffParts(wedding.date, new Date()),
-  );
+  // Starts null rather than computing from `new Date()` in the lazy
+  // initializer: that ran on the server at one instant and on the client
+  // at hydration a moment later, and whenever those landed in different
+  // seconds the digit text mismatched and crashed the tree. Null renders
+  // identically on both sides; the real value lands a tick later.
+  const [t, setT] = useState<TimeParts | null>(null);
 
   useEffect(() => {
-    const i = window.setInterval(() => {
-      setT(diffParts(wedding.date, new Date()));
-    }, 1000);
+    const tick = () => setT(diffParts(wedding.date, new Date()));
+    // Deferred to a microtask rather than called synchronously in the
+    // effect body (react-hooks/set-state-in-effect) — still resolves
+    // before the next paint, so there's no visible placeholder flash.
+    queueMicrotask(tick);
+    const i = window.setInterval(tick, 1000);
     return () => window.clearInterval(i);
   }, []);
 
@@ -94,11 +100,12 @@ export default function Countdown() {
     return () => ctx.revert();
   }, []);
 
+  const parts = t ?? { days: 0, hours: 0, minutes: 0, seconds: 0 };
   const units: { label: string; value: number; pad?: number }[] = [
-    { label: "Days", value: t.days, pad: 2 },
-    { label: "Hours", value: t.hours, pad: 2 },
-    { label: "Min", value: t.minutes, pad: 2 },
-    { label: "Sec", value: t.seconds, pad: 2 },
+    { label: "Days", value: parts.days, pad: 2 },
+    { label: "Hours", value: parts.hours, pad: 2 },
+    { label: "Min", value: parts.minutes, pad: 2 },
+    { label: "Sec", value: parts.seconds, pad: 2 },
   ];
 
   return (
