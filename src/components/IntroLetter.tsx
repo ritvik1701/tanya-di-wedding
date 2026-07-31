@@ -6,6 +6,41 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Star } from "./Stars";
 import { getLenis } from "./SmoothScroll";
 
+// The artwork the intro animates, plus what the Hero shows the moment it
+// takes over. Nothing here is served by next/image, so the browser only
+// starts fetching when the element paints — which is why the pieces used
+// to appear one by one over the opening beats.
+const INTRO_ASSETS = [
+  "/assets/hero-window.png",
+  "/assets/stamp-seal-sticker.png",
+  "/assets/backgrounds/hero.jpg",
+  "/assets/top-center-sticker.png",
+  "/assets/side-motifs-sticker.png",
+];
+
+// Settles when every asset has loaded or failed, or when the cap runs
+// out, whichever comes first. A slow connection should delay the intro,
+// not hold the reader at a holding screen indefinitely.
+function preloadAssets(capMs: number): Promise<void> {
+  const loaded = Promise.all(
+    INTRO_ASSETS.map(
+      (src) =>
+        new Promise<void>((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve();
+          img.onerror = () => resolve();
+          img.src = src;
+        }),
+    ),
+  ).then(() => undefined);
+
+  const cap = new Promise<void>((resolve) => {
+    window.setTimeout(resolve, capMs);
+  });
+
+  return Promise.race([loaded, cap]);
+}
+
 // Deterministic pseudo-random so SSR and client match. 48 petals, each
 // with its own burst angle / size / rotation / fall distance — tuned for
 // a celebratory marigold shower that crosses the viewport.
@@ -73,6 +108,9 @@ const PETAL_DEFS: PetalDef[] = Array.from({ length: PETAL_COUNT }, (_, i) => {
  */
 export default function IntroLetter() {
   const [hidden, setHidden] = useState(false);
+  // False until the artwork is in and the pieces have been placed. The
+  // overlay stays invisible behind a holding screen until then.
+  const [ready, setReady] = useState(false);
 
   const rootRef = useRef<HTMLDivElement>(null);
   const bgRef = useRef<HTMLDivElement>(null);
@@ -153,17 +191,22 @@ export default function IntroLetter() {
       window.dispatchEvent(new Event("th:hero-reveal"));
     };
 
+    let cancelled = false;
+
     const ctx = gsap.context(() => {
-      // Corner stars + eyebrow fade-in
-      gsap.from(".il-reveal", {
+      // Corner stars + eyebrow fade-in. Paused like the timeline, and
+      // released with it, so the two still run together.
+      const revealTween = gsap.from(".il-reveal", {
         autoAlpha: 0,
         duration: 0.5,
         stagger: 0.08,
         ease: "power3.out",
         delay: 0.05,
+        paused: true,
       });
 
       const tl = gsap.timeline({
+        paused: true,
         onComplete: () => setHidden(true),
       });
 
@@ -423,9 +466,22 @@ export default function IntroLetter() {
       //     overlay is transparent and click-through by now, so this
       //     costs the reader nothing.
       tl.to({}, { duration: 3.0 });
+
+      // Everything above only positions the pieces; nothing has moved
+      // yet. Hold until the artwork is in, then reveal the overlay and
+      // start, so the first thing the reader sees is the envelope sitting
+      // closed rather than the parts arriving one at a time and snapping
+      // into place.
+      preloadAssets(3000).then(() => {
+        if (cancelled) return;
+        setReady(true);
+        revealTween.play();
+        tl.play();
+      });
     }, rootRef);
 
     return () => {
+      cancelled = true;
       window.clearTimeout(lenisTimer);
       window.clearTimeout(hideTimer);
       release();
@@ -436,10 +492,32 @@ export default function IntroLetter() {
   if (hidden) return null;
 
   return (
-    <div
-      ref={rootRef}
-      className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden px-5"
-    >
+    <>
+      {/* Holding screen. Sits above the overlay and covers it until the
+          artwork is in and GSAP has placed the pieces. Without it the
+          browser paints every piece in its untransformed position first,
+          so the intro looked like it began by snapping them into place. */}
+      <div
+        aria-hidden
+        className={`il-loader fixed inset-0 z-[101] flex items-center justify-center ${
+          ready ? "il-loader--out" : ""
+        }`}
+        style={{ backgroundColor: "#f0e4cc" }}
+      >
+        <span className="il-loader-mark block">
+          <Star size={34} color="#9d4130" />
+        </span>
+      </div>
+
+      <div
+        ref={rootRef}
+        className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden px-5"
+        // Driven by state rather than poked at imperatively, so a later
+        // re-render can't put it back. `visibility` and not `display`:
+        // step 8 measures the card against the Hero's window, and a
+        // display:none box has no dimensions to measure.
+        style={{ visibility: ready ? "visible" : "hidden" }}
+      >
       {/* Fadeable background — separate from the overlay root so the
           petals layer can stay fully opaque over the Hero after the bg
           fades away. */}
@@ -685,7 +763,36 @@ export default function IntroLetter() {
             </svg>
           </span>
         ))}
+        </div>
       </div>
-    </div>
+
+      <style jsx>{`
+        .il-loader {
+          transition: opacity 500ms ease;
+        }
+        .il-loader--out {
+          opacity: 0;
+          pointer-events: none;
+        }
+        .il-loader-mark {
+          animation: il-loader-pulse 1.4s ease-in-out infinite;
+        }
+        @keyframes il-loader-pulse {
+          0%,
+          100% {
+            opacity: 0.3;
+          }
+          50% {
+            opacity: 1;
+          }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .il-loader-mark {
+            animation: none;
+            opacity: 0.8;
+          }
+        }
+      `}</style>
+    </>
   );
 }
