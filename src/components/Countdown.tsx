@@ -92,18 +92,31 @@ export default function Countdown({ events }: { events: WeddingEvent[] }) {
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.from(".cd-reveal", {
-        scrollTrigger: {
-          trigger: root.current,
-          start: "top 75%",
-          toggleActions: "play none none reverse",
+      // fromTo, not from. A `from` tween never states where it is going,
+      // so GSAP reads each element during setup and keeps whatever
+      // opacity it finds as the destination. A ScrollTrigger re-measures
+      // the page more than once, and the intro letter forces one of those
+      // when it hands over, which is enough for an element to be read
+      // while it is still sitting in its own start state. That is what
+      // happened to the Open Invitations button: its destination was
+      // recorded as zero and it animated from invisible to invisible.
+      // Naming both ends leaves nothing to infer.
+      gsap.fromTo(
+        ".cd-reveal",
+        { autoAlpha: 0, y: 24 },
+        {
+          scrollTrigger: {
+            trigger: root.current,
+            start: "top 75%",
+            toggleActions: "play none none reverse",
+          },
+          autoAlpha: 1,
+          y: 0,
+          duration: 1,
+          stagger: 0.1,
+          ease: "power3.out",
         },
-        autoAlpha: 0,
-        y: 24,
-        duration: 1,
-        stagger: 0.1,
-        ease: "power3.out",
-      });
+      );
     }, root);
     return () => ctx.revert();
   }, []);
@@ -140,11 +153,15 @@ export default function Countdown({ events }: { events: WeddingEvent[] }) {
         {/* The way down to the event deck. Sits above everything else
             because nothing below the countdown announces itself, and a
             reader who has just arrived shouldn't have to reach the end
-            of the section to find out there is more. */}
+            of the section to find out there is more.
+            Deliberately outside the .cd-reveal group: the rest of this
+            section is decoration and can afford to fade in, but this is
+            the one control on the page and should not depend on an
+            animation completing to exist. */}
         <button
           type="button"
           onClick={openInvitations}
-          className="cd-reveal tl-action-btn tl-action-btn--solid mb-8 inline-flex min-h-[44px] items-center gap-2.5 border px-5 py-3 text-xs uppercase sm:mb-10 sm:px-6 sm:text-sm"
+          className="tl-action-btn tl-action-btn--solid mb-8 inline-flex min-h-[44px] items-center gap-2.5 border px-5 py-3 text-xs uppercase sm:mb-10 sm:px-6 sm:text-sm"
           style={{
             letterSpacing: "0.22em",
             fontFamily: "var(--font-display)",

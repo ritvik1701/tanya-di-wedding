@@ -12,18 +12,24 @@ export default function Shlok() {
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.from(".shlok-reveal > *", {
-        scrollTrigger: {
-          trigger: ".shlok-reveal",
-          start: "top 80%",
-          toggleActions: "play none none reverse",
+      // fromTo, not from — see the note on the Countdown's reveal. Same
+      // pattern, same way of stranding an element permanently invisible.
+      gsap.fromTo(
+        ".shlok-reveal > *",
+        { autoAlpha: 0, y: 24 },
+        {
+          scrollTrigger: {
+            trigger: ".shlok-reveal",
+            start: "top 80%",
+            toggleActions: "play none none reverse",
+          },
+          autoAlpha: 1,
+          y: 0,
+          duration: 1,
+          stagger: 0.12,
+          ease: "power3.out",
         },
-        autoAlpha: 0,
-        y: 24,
-        duration: 1,
-        stagger: 0.12,
-        ease: "power3.out",
-      });
+      );
     }, rootRef);
     return () => ctx.revert();
   }, []);
