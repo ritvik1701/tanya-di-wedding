@@ -29,8 +29,11 @@ export default function Shlok() {
   }, []);
 
   return (
-    <section ref={rootRef} className="relative">
-      <div className="shlok-reveal relative flex flex-col items-center gap-8 px-5 py-14 text-center sm:gap-10 sm:px-8 sm:py-18 md:gap-14 md:py-22">
+    <section ref={rootRef} data-scroll-stop="" className="relative">
+      {/* Bottom padding runs shorter than the top: the Countdown opens
+          with the Open Invitations button rather than a heading, and the
+          full symmetric padding left it stranded in a void. */}
+      <div className="shlok-reveal relative flex flex-col items-center gap-8 px-5 pb-10 pt-14 text-center sm:gap-10 sm:px-8 sm:pb-12 sm:pt-18 md:gap-14 md:pb-14 md:pt-22">
         <div className="flex flex-col items-center">
           <span
             className="block"

@@ -5,7 +5,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { AnimatePresence, motion } from "framer-motion";
 import { wedding } from "@/config/wedding";
-import { getLenis } from "./SmoothScroll";
+import { absoluteTop, scrollToY } from "@/lib/scroll";
 
 type TimeParts = { days: number; hours: number; minutes: number; seconds: number };
 
@@ -101,24 +101,10 @@ export default function Countdown() {
     return () => ctx.revert();
   }, []);
 
-  // Jumps to the top of the event deck. Goes through Lenis where it's
-  // running so the travel matches the rest of the page's scrolling; the
-  // native fallback is for reduced-motion, where Lenis stays off.
+  // Jumps to the top of the event deck.
   const openInvitations = useCallback(() => {
-    const target = document.getElementById("events");
-    if (!target) return;
-    const y = target.getBoundingClientRect().top + window.scrollY;
-
-    const lenis = getLenis();
-    if (lenis) {
-      lenis.scrollTo(y, {
-        duration: 1.1,
-        easing: (p: number) => 1 - Math.pow(1 - p, 3),
-        lock: true,
-      });
-    } else {
-      window.scrollTo({ top: y, behavior: "smooth" });
-    }
+    const deck = document.getElementById("events");
+    if (deck) scrollToY(absoluteTop(deck), 1.1);
   }, []);
 
   const parts = t ?? { days: 0, hours: 0, minutes: 0, seconds: 0 };
@@ -132,7 +118,8 @@ export default function Countdown() {
   return (
     <section
       ref={root}
-      className="relative flex items-center justify-center px-4 pb-14 pt-6 sm:px-6 sm:pb-20 sm:pt-10 md:pb-24 md:pt-12"
+      data-scroll-stop=""
+      className="relative flex items-center justify-center px-4 pb-14 sm:px-6 sm:pb-20 md:pb-24"
     >
       <div className="mx-auto flex max-w-5xl flex-col items-center text-center">
         {/* The way down to the event deck. Sits above everything else
@@ -315,54 +302,7 @@ export default function Countdown() {
           Until the day we&apos;ve all been waiting for.
         </p>
 
-        {/* The ambient half of the pair. Stays at the foot of the
-            section, matching the hero's own cue, so a reader who scrolls
-            past the button still gets the hint. The wrapper carries the
-            reveal: GSAP animates transform, and so does the bounce, so
-            the two can't share an element. */}
-        <div className="cd-reveal mt-10 flex flex-col items-center sm:mt-12">
-          <span aria-hidden className="cd-scroll-cue block">
-            <svg width="18" height="22" viewBox="0 0 18 22" fill="none">
-              <path
-                d="M2 2 L9 8 L16 2"
-                stroke="#9d4130"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                opacity="0.45"
-              />
-              <path
-                d="M2 12 L9 18 L16 12"
-                stroke="#9d4130"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                opacity="0.85"
-              />
-            </svg>
-          </span>
-        </div>
       </div>
-
-      <style jsx>{`
-        .cd-scroll-cue {
-          animation: cd-scroll-bounce 1.8s ease-in-out infinite;
-        }
-        @keyframes cd-scroll-bounce {
-          0%,
-          100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(6px);
-          }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .cd-scroll-cue {
-            animation: none;
-          }
-        }
-      `}</style>
     </section>
   );
 }

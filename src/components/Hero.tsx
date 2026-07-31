@@ -109,6 +109,7 @@ export default function Hero() {
   return (
     <section
       ref={root}
+      data-scroll-stop=""
       className="relative flex h-[100svh] flex-col overflow-hidden"
       style={{
         backgroundImage:
@@ -282,58 +283,6 @@ export default function Hero() {
         </div>
       </main>
 
-      {/* Tiny scroll indicator — double chevron, gently bouncing */}
-      <div
-        className="hero-scroll-cue pointer-events-none absolute bottom-5 left-1/2 z-20 -translate-x-1/2 sm:bottom-7"
-        aria-hidden
-      >
-        <svg
-          width="18"
-          height="22"
-          viewBox="0 0 18 22"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M2 2 L9 8 L16 2"
-            stroke="#f0d28a"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            opacity="0.55"
-          />
-          <path
-            d="M2 12 L9 18 L16 12"
-            stroke="#f0d28a"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </div>
-
-      <style jsx>{`
-        .hero-scroll-cue {
-          animation: hero-scroll-bounce 1.8s ease-in-out infinite;
-        }
-        /* Y only — see the Timeline cue. Tailwind 4's -translate-x-1/2
-           uses the standalone translate property, so an -50% here would
-           be applied on top of it rather than instead of it. */
-        @keyframes hero-scroll-bounce {
-          0%,
-          100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(6px);
-          }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .hero-scroll-cue {
-            animation: none;
-          }
-        }
-      `}</style>
     </section>
   );
 }

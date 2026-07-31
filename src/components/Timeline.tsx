@@ -5,7 +5,7 @@ import type { WeddingEvent } from "@/config/wedding";
 import DriftingPetals from "./DriftingPetals";
 import EventIcon from "./EventIcon";
 import Fireworks from "./Fireworks";
-import { getLenis } from "./SmoothScroll";
+import { absoluteTop, scrollToY, SCROLL_STOP } from "@/lib/scroll";
 
 const formatDate = (d: Date) =>
   d.toLocaleDateString("en-GB", {
@@ -51,11 +51,6 @@ const EVENT_TONE: Record<string, Tone> = {
 // Nothing is laid over the artwork itself, so the text carries its own
 // legibility. The dark card is a photograph with bright lanterns behind
 // the type, which is the one place a shadow is needed.
-// `cueHalo` is for the scroll chevron only. It sits in the blurred band
-// below the card, which is a busy mid-tone field of whatever the artwork
-// happened to be, so a bare stroke disappears into it. A tight shadow in
-// the opposite tone plus a wider one reads as an outline and a glow, and
-// carries the chevron over anything behind it.
 const TONES = {
   dark: {
     title: "#fff4e0",
@@ -63,8 +58,6 @@ const TONES = {
     label: "#e8dbb4",
     glow: "rgba(255, 244, 224, 0.15)",
     shadow: "0 2px 14px rgba(0, 0, 0, 0.85), 0 0 3px rgba(0, 0, 0, 0.7)",
-    cueHalo:
-      "drop-shadow(0 0 2px rgba(0, 0, 0, 0.95)) drop-shadow(0 2px 8px rgba(0, 0, 0, 0.85))",
   },
   light: {
     title: "#9d4130",
@@ -72,8 +65,6 @@ const TONES = {
     label: "#5f6f4d",
     glow: "rgba(157, 65, 48, 0.15)",
     shadow: "none",
-    cueHalo:
-      "drop-shadow(0 0 2px rgba(255, 244, 224, 0.95)) drop-shadow(0 1px 8px rgba(255, 244, 224, 0.9))",
   },
 } as const;
 
@@ -180,24 +171,17 @@ export default function Timeline({ events }: { events: WeddingEvent[] }) {
     };
   }, [events.length]);
 
-  // Click a dot → smoothly scroll to that event's slot in the deck
+  // Click a dot → smoothly scroll to that event's slot in the deck. The
+  // card's own layout position, not deck top plus idx × innerHeight: the
+  // cards are sized in svh, which on a phone with a retracting toolbar is
+  // shorter than innerHeight, so the multiplied stride drifted further
+  // out with every card.
   const scrollToEvent = useCallback((idx: number) => {
     const deck = deckRef.current;
     if (!deck) return;
-    const rect = deck.getBoundingClientRect();
-    const deckTop = rect.top + window.scrollY;
-    const targetY = deckTop + idx * window.innerHeight;
-
-    const lenis = getLenis();
-    if (lenis) {
-      lenis.scrollTo(targetY, {
-        duration: 0.9,
-        easing: (t: number) => 1 - Math.pow(1 - t, 3),
-        lock: true,
-      });
-    } else {
-      window.scrollTo({ top: targetY, behavior: "smooth" });
-    }
+    const card = deck.querySelectorAll<HTMLElement>(`[${SCROLL_STOP}]`)[idx];
+    if (!card) return;
+    scrollToY(absoluteTop(card));
   }, []);
 
   // The dot rail floats over whichever card is showing, so it takes that
@@ -279,6 +263,7 @@ export default function Timeline({ events }: { events: WeddingEvent[] }) {
           return (
             <section
               key={ev.id}
+              data-scroll-stop=""
               className="sticky top-0 h-[100svh] overflow-hidden"
               style={{
                 backgroundColor: bgColor,
@@ -519,61 +504,10 @@ export default function Timeline({ events }: { events: WeddingEvent[] }) {
                 </div>
               </div>
 
-              {/* Keep-going cue, in each card's own ink so it survives
-                  both the light artwork and the night photograph. It
-                  sits above the dot rail rather than beside it: the
-                  dots say where you are, this says there is more. */}
-              <span
-                aria-hidden
-                className="tl-scroll-cue absolute bottom-16 left-1/2 z-20 block -translate-x-1/2 sm:bottom-20"
-                style={{ filter: tone.cueHalo }}
-              >
-                <svg width="26" height="32" viewBox="0 0 18 22" fill="none">
-                  <path
-                    d="M2 2 L9 8 L16 2"
-                    stroke={tone.title}
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    opacity="0.7"
-                  />
-                  <path
-                    d="M2 12 L9 18 L16 12"
-                    stroke={tone.title}
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </span>
             </section>
           );
         })}
       </div>
-
-      <style jsx>{`
-        .tl-scroll-cue {
-          animation: tl-scroll-bounce 1.8s ease-in-out infinite;
-        }
-        /* Y only. Tailwind 4 compiles -translate-x-1/2 to the standalone
-           translate property, which composes with transform rather than
-           replacing it, so re-stating the -50% here shifts the cue a
-           second time and knocks it off centre. */
-        @keyframes tl-scroll-bounce {
-          0%,
-          100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(6px);
-          }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .tl-scroll-cue {
-            animation: none;
-          }
-        }
-      `}</style>
     </section>
   );
 }
