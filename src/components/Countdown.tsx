@@ -135,6 +135,41 @@ export default function Countdown() {
       className="relative flex items-center justify-center px-4 pb-14 pt-6 sm:px-6 sm:pb-20 sm:pt-10 md:pb-24 md:pt-12"
     >
       <div className="mx-auto flex max-w-5xl flex-col items-center text-center">
+        {/* The way down to the event deck. Sits above everything else
+            because nothing below the countdown announces itself, and a
+            reader who has just arrived shouldn't have to reach the end
+            of the section to find out there is more. */}
+        <button
+          type="button"
+          onClick={openInvitations}
+          className="cd-reveal tl-action-btn tl-action-btn--ink mb-8 inline-flex min-h-[44px] items-center gap-2.5 border px-5 py-3 text-xs uppercase sm:mb-10 sm:px-6 sm:text-sm"
+          style={{
+            letterSpacing: "0.22em",
+            fontFamily: "var(--font-display)",
+            fontWeight: 600,
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <rect
+              x="3"
+              y="5"
+              width="18"
+              height="14"
+              rx="2"
+              stroke="currentColor"
+              strokeWidth="1.8"
+            />
+            <path
+              d="M3 7.5 L12 13.5 L21 7.5"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          Open Invitations
+        </button>
+
         {/* Eyebrow */}
         <p
           className="cd-reveal text-center text-sm uppercase sm:text-base md:text-lg"
@@ -280,43 +315,13 @@ export default function Countdown() {
           Until the day we&apos;ve all been waiting for.
         </p>
 
-        {/* Nothing below the countdown announces itself, so the page can
-            read as if it ends here. The button is the actual way down;
-            the chevron beneath it is the ambient hint, matching the
-            hero's own cue so the two read as the same gesture. */}
-        <div className="cd-reveal mt-8 flex flex-col items-center sm:mt-10">
-          <button
-            type="button"
-            onClick={openInvitations}
-            className="tl-action-btn tl-action-btn--ink inline-flex min-h-[44px] items-center gap-2.5 border px-5 py-3 text-xs uppercase sm:px-6 sm:text-sm"
-            style={{
-              letterSpacing: "0.22em",
-              fontFamily: "var(--font-display)",
-              fontWeight: 600,
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-              <rect
-                x="3"
-                y="5"
-                width="18"
-                height="14"
-                rx="2"
-                stroke="currentColor"
-                strokeWidth="1.8"
-              />
-              <path
-                d="M3 7.5 L12 13.5 L21 7.5"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            Open Invitations
-          </button>
-
-          <span aria-hidden className="cd-scroll-cue mt-7 block sm:mt-8">
+        {/* The ambient half of the pair. Stays at the foot of the
+            section, matching the hero's own cue, so a reader who scrolls
+            past the button still gets the hint. The wrapper carries the
+            reveal: GSAP animates transform, and so does the bounce, so
+            the two can't share an element. */}
+        <div className="cd-reveal mt-10 flex flex-col items-center sm:mt-12">
+          <span aria-hidden className="cd-scroll-cue block">
             <svg width="18" height="22" viewBox="0 0 18 22" fill="none">
               <path
                 d="M2 2 L9 8 L16 2"
