@@ -27,8 +27,30 @@ export type Invite = {
 
 // The id is the entire secret, so it stays random rather than
 // descriptive. A descriptive id is guessable, and it also tells whoever
-// receives it what they were sorted into.
+// receives it what they were sorted into. Drawn from an alphabet with
+// 0/O and 1/l/i left out, so an id is safe to read aloud or type off a
+// printed card.
 export const INVITES = {
+  "7m4esyf4": {
+    for: "Kirtan and Wedding",
+    events: "kirtanAndWedding",
+  },
+  "8qmzy9hc": {
+    for: "Kirtan, Sagan and Wedding",
+    events: "kirtanSaganWedding",
+  },
+  yzm9uadt: {
+    for: "Wedding only",
+    events: "weddingOnly",
+  },
+  "87d6vkcr": {
+    for: "Kirtan only",
+    events: "kirtanOnly",
+  },
+  dhgkmcsj: {
+    for: "All five events",
+    events: "everything",
+  },
   n7q4vx2k: {
     for: "Sample link (Sagan and Wedding)",
     events: "saganAndWedding",
