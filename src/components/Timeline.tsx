@@ -7,11 +7,14 @@ import EventIcon from "./EventIcon";
 import Fireworks from "./Fireworks";
 import { absoluteTop, scrollToY, SCROLL_STOP } from "@/lib/scroll";
 
+// Pinned to the Indian calendar date, so a guest reading this abroad is
+// not shown the day before or after the one printed on their card.
 const formatDate = (d: Date) =>
   d.toLocaleDateString("en-GB", {
     weekday: "long",
     day: "numeric",
     month: "long",
+    timeZone: "Asia/Kolkata",
   });
 
 // Background art per event. All five are portrait 1410x2000 illustrations
@@ -112,16 +115,6 @@ const bandStyle = (band: { top: number; bottom: number }) => ({
   bottom: `${100 - band.bottom}%`,
 });
 
-
-// Hindi translations for each event — displayed large, with the English
-// name as a smaller caps subtitle underneath (matching the hero treatment).
-const EVENT_HI: Record<string, string> = {
-  kirtan: "कीर्तन",
-  sagan: "सगन",
-  "mehendi-sangeet": "मेहंदी और संगीत",
-  haldi: "हल्दी",
-  wedding: "विवाह",
-};
 
 // The events to show are passed in rather than read from config, because
 // which ones a reader sees depends on their invitation link.
@@ -259,7 +252,7 @@ export default function Timeline({ events }: { events: WeddingEvent[] }) {
           const bgColor = EVENT_BG_FALLBACK[ev.id] ?? "#f0e4cc";
           const tone = toneOf(ev.id);
           const band = bandOf(ev.id);
-          const hi = EVENT_HI[ev.id] ?? ev.name;
+          const hi = ev.nameHi;
           return (
             <section
               key={ev.id}

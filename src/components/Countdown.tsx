@@ -4,7 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { AnimatePresence, motion } from "framer-motion";
-import { wedding } from "@/config/wedding";
+import { byDate, countdownTarget, type WeddingEvent } from "@/config/wedding";
 import { absoluteTop, scrollToY } from "@/lib/scroll";
 
 type TimeParts = { days: number; hours: number; minutes: number; seconds: number };
@@ -58,23 +58,30 @@ function TickNumber({ value, pad = 2 }: { value: number; pad?: number }) {
   );
 }
 
+// Always the Indian calendar date, whatever the reader's own timezone
+// is. A guest abroad would otherwise be shown the day before or after
+// the one printed on their card.
+const IST = "Asia/Kolkata";
 const WEEKDAY = (d: Date) =>
-  d.toLocaleDateString("en-GB", { weekday: "long" });
+  d.toLocaleDateString("en-GB", { weekday: "long", timeZone: IST });
 const MONTH_YEAR = (d: Date) =>
-  d.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
-const DAY = (d: Date) => d.getDate();
+  d.toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: IST });
+const DAY = (d: Date) =>
+  d.toLocaleDateString("en-GB", { day: "numeric", timeZone: IST });
 
-export default function Countdown() {
+const STOPPED: TimeParts = { days: 0, hours: 0, minutes: 0, seconds: 0 };
+
+export default function Countdown({ events }: { events: WeddingEvent[] }) {
   const root = useRef<HTMLDivElement>(null);
   // Starts null rather than computing from `new Date()` in the lazy
   // initializer: that ran on the server at one instant and on the client
   // at hydration a moment later, and whenever those landed in different
   // seconds the digit text mismatched and crashed the tree. Null renders
   // identically on both sides; the real value lands a tick later.
-  const [t, setT] = useState<TimeParts | null>(null);
+  const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
-    const tick = () => setT(diffParts(wedding.date, new Date()));
+    const tick = () => setNow(new Date());
     // Deferred to a microtask rather than called synchronously in the
     // effect body (react-hooks/set-state-in-effect) — still resolves
     // before the next paint, so there's no visible placeholder flash.
@@ -107,7 +114,15 @@ export default function Countdown() {
     if (deck) scrollToY(absoluteTop(deck), 1.1);
   }, []);
 
-  const parts = t ?? { days: 0, hours: 0, minutes: 0, seconds: 0 };
+  // `target` is null once every event on this link has started. The
+  // labels then stay on the last of them and the clock sits at zero,
+  // rather than the section blanking out or counting up from a date that
+  // has already gone.
+  const target = countdownTarget(events, now);
+  const shown = target ?? [...events].sort(byDate).at(-1) ?? null;
+  const parts = now && target ? diffParts(target.date, now) : STOPPED;
+
+  if (!shown) return null;
   const units: { label: string; value: number; pad?: number }[] = [
     { label: "Days", value: parts.days, pad: 2 },
     { label: "Hours", value: parts.hours, pad: 2 },
@@ -181,7 +196,7 @@ export default function Countdown() {
             lineHeight: 1.1,
           }}
         >
-          शुभ विवाह
+          {shown.countdownHi ?? shown.nameHi}
         </h2>
 
         {/* Big date — centerpiece, flanked by gena phool (no frame here) */}
@@ -204,7 +219,7 @@ export default function Countdown() {
                 fontWeight: 600,
               }}
             >
-              {WEEKDAY(wedding.date)}
+              {WEEKDAY(shown.date)}
             </span>
             <span
               className="mt-3 block leading-none sm:mt-4"
@@ -217,7 +232,7 @@ export default function Countdown() {
                 lineHeight: 1,
               }}
             >
-              {DAY(wedding.date)}
+              {DAY(shown.date)}
             </span>
             <span
               className="mt-3 uppercase sm:mt-4 text-sm sm:text-base md:text-xl"
@@ -228,7 +243,7 @@ export default function Countdown() {
                 fontWeight: 600,
               }}
             >
-              {MONTH_YEAR(wedding.date)}
+              {MONTH_YEAR(shown.date)}
             </span>
           </div>
 

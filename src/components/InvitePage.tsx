@@ -8,15 +8,15 @@ import type { WeddingEvent } from "@/config/wedding";
 
 // The whole invitation, minus the decision of which events to show. The
 // root URL passes every event, a guest link passes that guest's subset.
-// Everything above the Timeline is the same for everyone: the couple, the
-// blessing, and the countdown to the wedding day itself.
+// The countdown takes the same list, since a link without the wedding on
+// it has to count to something the reader is actually coming to.
 export default function InvitePage({ events }: { events: WeddingEvent[] }) {
   return (
     <main className="relative">
       <Hero />
       <SectionDivider />
       <Shlok />
-      <Countdown />
+      <Countdown events={events} />
       <SectionDivider direction="right" />
       <Timeline events={events} />
       <SectionDivider />
