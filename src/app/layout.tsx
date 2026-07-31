@@ -3,7 +3,6 @@ import { Cormorant_Garamond, Tenor_Sans, Cinzel, Yatra_One } from "next/font/goo
 import "./globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
 import StarsBackdrop from "@/components/StarsBackdrop";
-import IntroLetter from "@/components/IntroLetter";
 
 const displayFont = Cinzel({
   weight: ["400", "500", "600", "700"],
@@ -52,8 +51,10 @@ export default function RootLayout({
       <body className="min-h-full bg-festive">
         <SmoothScroll />
         <StarsBackdrop />
+        {/* The envelope intro belongs to the invitation itself, not the
+            shell — the root is a plain gate page and opens with no
+            animation at all. It is rendered by InvitePage instead. */}
         <div className="relative z-10">{children}</div>
-        <IntroLetter />
       </body>
     </html>
   );

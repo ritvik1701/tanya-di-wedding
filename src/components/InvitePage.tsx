@@ -4,6 +4,7 @@ import Countdown from "@/components/Countdown";
 import Timeline from "@/components/Timeline";
 import SectionDivider from "@/components/SectionDivider";
 import ScrollCue from "@/components/ScrollCue";
+import IntroLetter from "@/components/IntroLetter";
 import type { WeddingEvent } from "@/config/wedding";
 
 // The whole invitation, minus the decision of which events to show. The
@@ -61,6 +62,7 @@ export default function InvitePage({ events }: { events: WeddingEvent[] }) {
       </footer>
 
       <ScrollCue />
+      <IntroLetter />
     </main>
   );
 }
