@@ -101,6 +101,15 @@ export default function IntroLetter() {
     // tick once it's actually up.
     const lenisTimer = window.setTimeout(stopLenis, 0);
 
+    // The overlay unmounts on the timeline's onComplete, and GSAP runs on
+    // rAF, which browsers throttle to a standstill in a backgrounded tab.
+    // A reader who opens the link and switches apps mid-intro comes back
+    // to a stalled timeline and an overlay that never leaves. This bound
+    // does not depend on the timeline reaching its end. The full sequence
+    // runs a little under 9s, so it only ever fires when something has
+    // already gone wrong.
+    const hideTimer = window.setTimeout(() => setHidden(true), 15000);
+
     // Hands the page back to the reader. Runs at the reveal beat rather
     // than at the end of the timeline, so the trailing petal fall doesn't
     // hold scrolling hostage. Idempotent — the cleanup calls it again as
@@ -119,13 +128,25 @@ export default function IntroLetter() {
 
       const rootEl = rootRef.current;
       if (rootEl) {
-        // Swap viewport anchoring for document anchoring. With no
-        // positioned ancestor, `absolute` + inset-0 resolves against the
-        // initial containing block: a viewport-sized box at the document
-        // origin, which is exactly the Hero. Scroll is still pinned at 0
-        // at this instant, so nothing shifts. From here the petals scroll
-        // away with the Hero instead of hovering over the viewport.
+        // Swap viewport anchoring for document anchoring, so the petals
+        // scroll away with the Hero instead of hovering over the viewport.
+        // Scroll is still pinned at 0 at this instant, so nothing shifts.
+        //
+        // The box is stated outright rather than left to `inset-0`, which
+        // resolves against the nearest positioned ancestor. This renders
+        // inside the invitation's <main>, so inheriting that box makes the
+        // overlay as tall as the whole page — and the discarded envelope,
+        // parked 140vh below centre by step 7 and normally clipped by the
+        // root's own overflow-hidden, lands far enough down the document
+        // to be seen. That is what flashed an empty envelope over the last
+        // section on the way down.
         rootEl.style.position = "absolute";
+        rootEl.style.top = "0";
+        rootEl.style.left = "0";
+        rootEl.style.right = "auto";
+        rootEl.style.bottom = "auto";
+        rootEl.style.width = "100%";
+        rootEl.style.height = "100svh";
         rootEl.style.pointerEvents = "none";
       }
 
@@ -406,6 +427,7 @@ export default function IntroLetter() {
 
     return () => {
       window.clearTimeout(lenisTimer);
+      window.clearTimeout(hideTimer);
       release();
       ctx.revert();
     };
