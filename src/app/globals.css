@@ -64,6 +64,7 @@ html.lenis body {
   backdrop-filter: blur(12px) saturate(1.4);
   transition:
     background-color 180ms ease,
+    border-color 180ms ease,
     color 180ms ease,
     opacity 180ms ease;
 }
@@ -79,6 +80,22 @@ html.lenis body {
 }
 .tl-action-btn--ink:hover:not(:disabled):not([aria-disabled="true"]) {
   background-color: #9d4130;
+  color: #fff4e0;
+}
+
+/* Solid terracotta variant — the countdown's one primary action. Filled
+   rather than outlined so it reads as the thing to press, not as another
+   quiet control. Nothing shows through it, so the frosted panel goes. */
+.tl-action-btn--solid {
+  border-color: #9d4130;
+  color: #fff4e0;
+  background-color: #9d4130;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.tl-action-btn--solid:hover:not(:disabled):not([aria-disabled="true"]) {
+  background-color: #823426;
+  border-color: #823426;
   color: #fff4e0;
 }
 

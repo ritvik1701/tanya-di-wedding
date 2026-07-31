@@ -142,7 +142,7 @@ export default function Countdown() {
         <button
           type="button"
           onClick={openInvitations}
-          className="cd-reveal tl-action-btn tl-action-btn--ink mb-8 inline-flex min-h-[44px] items-center gap-2.5 border px-5 py-3 text-xs uppercase sm:mb-10 sm:px-6 sm:text-sm"
+          className="cd-reveal tl-action-btn tl-action-btn--solid mb-8 inline-flex min-h-[44px] items-center gap-2.5 border px-5 py-3 text-xs uppercase sm:mb-10 sm:px-6 sm:text-sm"
           style={{
             letterSpacing: "0.22em",
             fontFamily: "var(--font-display)",

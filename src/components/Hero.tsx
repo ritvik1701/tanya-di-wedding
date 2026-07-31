@@ -316,13 +316,16 @@ export default function Hero() {
         .hero-scroll-cue {
           animation: hero-scroll-bounce 1.8s ease-in-out infinite;
         }
+        /* Y only — see the Timeline cue. Tailwind 4's -translate-x-1/2
+           uses the standalone translate property, so an -50% here would
+           be applied on top of it rather than instead of it. */
         @keyframes hero-scroll-bounce {
           0%,
           100% {
-            transform: translate(-50%, 0);
+            transform: translateY(0);
           }
           50% {
-            transform: translate(-50%, 6px);
+            transform: translateY(6px);
           }
         }
         @media (prefers-reduced-motion: reduce) {

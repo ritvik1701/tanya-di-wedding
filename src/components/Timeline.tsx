@@ -51,6 +51,11 @@ const EVENT_TONE: Record<string, Tone> = {
 // Nothing is laid over the artwork itself, so the text carries its own
 // legibility. The dark card is a photograph with bright lanterns behind
 // the type, which is the one place a shadow is needed.
+// `cueHalo` is for the scroll chevron only. It sits in the blurred band
+// below the card, which is a busy mid-tone field of whatever the artwork
+// happened to be, so a bare stroke disappears into it. A tight shadow in
+// the opposite tone plus a wider one reads as an outline and a glow, and
+// carries the chevron over anything behind it.
 const TONES = {
   dark: {
     title: "#fff4e0",
@@ -58,6 +63,8 @@ const TONES = {
     label: "#e8dbb4",
     glow: "rgba(255, 244, 224, 0.15)",
     shadow: "0 2px 14px rgba(0, 0, 0, 0.85), 0 0 3px rgba(0, 0, 0, 0.7)",
+    cueHalo:
+      "drop-shadow(0 0 2px rgba(0, 0, 0, 0.95)) drop-shadow(0 2px 8px rgba(0, 0, 0, 0.85))",
   },
   light: {
     title: "#9d4130",
@@ -65,6 +72,8 @@ const TONES = {
     label: "#5f6f4d",
     glow: "rgba(157, 65, 48, 0.15)",
     shadow: "none",
+    cueHalo:
+      "drop-shadow(0 0 2px rgba(255, 244, 224, 0.95)) drop-shadow(0 1px 8px rgba(255, 244, 224, 0.9))",
   },
 } as const;
 
@@ -517,29 +526,23 @@ export default function Timeline({ events }: { events: WeddingEvent[] }) {
               <span
                 aria-hidden
                 className="tl-scroll-cue absolute bottom-16 left-1/2 z-20 block -translate-x-1/2 sm:bottom-20"
-                style={{
-                  filter:
-                    EVENT_TONE[ev.id] === "dark"
-                      ? "drop-shadow(0 2px 6px rgba(0, 0, 0, 0.8))"
-                      : "none",
-                }}
+                style={{ filter: tone.cueHalo }}
               >
-                <svg width="18" height="22" viewBox="0 0 18 22" fill="none">
+                <svg width="26" height="32" viewBox="0 0 18 22" fill="none">
                   <path
                     d="M2 2 L9 8 L16 2"
                     stroke={tone.title}
-                    strokeWidth="1.5"
+                    strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    opacity="0.45"
+                    opacity="0.7"
                   />
                   <path
                     d="M2 12 L9 18 L16 12"
                     stroke={tone.title}
-                    strokeWidth="1.5"
+                    strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    opacity="0.85"
                   />
                 </svg>
               </span>
@@ -552,13 +555,17 @@ export default function Timeline({ events }: { events: WeddingEvent[] }) {
         .tl-scroll-cue {
           animation: tl-scroll-bounce 1.8s ease-in-out infinite;
         }
+        /* Y only. Tailwind 4 compiles -translate-x-1/2 to the standalone
+           translate property, which composes with transform rather than
+           replacing it, so re-stating the -50% here shifts the cue a
+           second time and knocks it off centre. */
         @keyframes tl-scroll-bounce {
           0%,
           100% {
-            transform: translate(-50%, 0);
+            transform: translateY(0);
           }
           50% {
-            transform: translate(-50%, 6px);
+            transform: translateY(6px);
           }
         }
         @media (prefers-reduced-motion: reduce) {
