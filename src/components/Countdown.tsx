@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { AnimatePresence, motion } from "framer-motion";
 import { wedding } from "@/config/wedding";
+import { getLenis } from "./SmoothScroll";
 
 type TimeParts = { days: number; hours: number; minutes: number; seconds: number };
 
@@ -98,6 +99,26 @@ export default function Countdown() {
       });
     }, root);
     return () => ctx.revert();
+  }, []);
+
+  // Jumps to the top of the event deck. Goes through Lenis where it's
+  // running so the travel matches the rest of the page's scrolling; the
+  // native fallback is for reduced-motion, where Lenis stays off.
+  const openInvitations = useCallback(() => {
+    const target = document.getElementById("events");
+    if (!target) return;
+    const y = target.getBoundingClientRect().top + window.scrollY;
+
+    const lenis = getLenis();
+    if (lenis) {
+      lenis.scrollTo(y, {
+        duration: 1.1,
+        easing: (p: number) => 1 - Math.pow(1 - p, 3),
+        lock: true,
+      });
+    } else {
+      window.scrollTo({ top: y, behavior: "smooth" });
+    }
   }, []);
 
   const parts = t ?? { days: 0, hours: 0, minutes: 0, seconds: 0 };
@@ -258,7 +279,85 @@ export default function Countdown() {
         >
           Until the day we&apos;ve all been waiting for.
         </p>
+
+        {/* Nothing below the countdown announces itself, so the page can
+            read as if it ends here. The button is the actual way down;
+            the chevron beneath it is the ambient hint, matching the
+            hero's own cue so the two read as the same gesture. */}
+        <div className="cd-reveal mt-8 flex flex-col items-center sm:mt-10">
+          <button
+            type="button"
+            onClick={openInvitations}
+            className="tl-action-btn tl-action-btn--ink inline-flex min-h-[44px] items-center gap-2.5 border px-5 py-3 text-xs uppercase sm:px-6 sm:text-sm"
+            style={{
+              letterSpacing: "0.22em",
+              fontFamily: "var(--font-display)",
+              fontWeight: 600,
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <rect
+                x="3"
+                y="5"
+                width="18"
+                height="14"
+                rx="2"
+                stroke="currentColor"
+                strokeWidth="1.8"
+              />
+              <path
+                d="M3 7.5 L12 13.5 L21 7.5"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            Open Invitations
+          </button>
+
+          <span aria-hidden className="cd-scroll-cue mt-7 block sm:mt-8">
+            <svg width="18" height="22" viewBox="0 0 18 22" fill="none">
+              <path
+                d="M2 2 L9 8 L16 2"
+                stroke="#9d4130"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                opacity="0.45"
+              />
+              <path
+                d="M2 12 L9 18 L16 12"
+                stroke="#9d4130"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                opacity="0.85"
+              />
+            </svg>
+          </span>
+        </div>
       </div>
+
+      <style jsx>{`
+        .cd-scroll-cue {
+          animation: cd-scroll-bounce 1.8s ease-in-out infinite;
+        }
+        @keyframes cd-scroll-bounce {
+          0%,
+          100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(6px);
+          }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .cd-scroll-cue {
+            animation: none;
+          }
+        }
+      `}</style>
     </section>
   );
 }

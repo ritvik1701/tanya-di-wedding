@@ -8,9 +8,23 @@ export const wedding = {
   location: "Krishna Greens, Pushpanjali Farms, New Delhi",
 };
 
+// The canonical list of event ids. Declared as a literal tuple so that
+// anything referring to an event by id (the invite config, the per-event
+// artwork maps) fails to compile on a typo rather than silently
+// rendering nothing.
+export const EVENT_IDS = [
+  "kirtan",
+  "sagan",
+  "mehendi-sangeet",
+  "haldi",
+  "wedding",
+] as const;
+
+export type EventId = (typeof EVENT_IDS)[number];
+
 // Timeline of events. Details taken from the printed invitation cards.
 export type WeddingEvent = {
-  id: string;
+  id: EventId;
   name: string;
   date: Date;
   time: string;

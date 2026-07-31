@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { events } from "@/config/wedding";
+import type { WeddingEvent } from "@/config/wedding";
 import DriftingPetals from "./DriftingPetals";
 import EventIcon from "./EventIcon";
 import Fireworks from "./Fireworks";
@@ -123,7 +123,9 @@ const EVENT_HI: Record<string, string> = {
   wedding: "विवाह",
 };
 
-export default function Timeline() {
+// The events to show are passed in rather than read from config, because
+// which ones a reader sees depends on their invitation link.
+export default function Timeline({ events }: { events: WeddingEvent[] }) {
   const sectionRef = useRef<HTMLElement>(null);
   const deckRef = useRef<HTMLDivElement>(null);
 
@@ -167,7 +169,7 @@ export default function Timeline() {
       window.removeEventListener("scroll", update);
       window.removeEventListener("resize", update);
     };
-  }, []);
+  }, [events.length]);
 
   // Click a dot → smoothly scroll to that event's slot in the deck
   const scrollToEvent = useCallback((idx: number) => {
@@ -193,8 +195,9 @@ export default function Timeline() {
   // card's tone or it disappears against the light illustrations.
   const railTone = toneOf(events[active]?.id ?? "");
 
+  // `id` is the scroll target for the Countdown's "Open invitations".
   return (
-    <section ref={sectionRef} className="relative">
+    <section ref={sectionRef} id="events" className="relative">
       {/* Slide deck — each section sticks to the top of the viewport and
           the next one slides over it as you scroll. */}
       <div ref={deckRef} className="relative">
@@ -506,10 +509,64 @@ export default function Timeline() {
                   </div>
                 </div>
               </div>
+
+              {/* Keep-going cue, in each card's own ink so it survives
+                  both the light artwork and the night photograph. It
+                  sits above the dot rail rather than beside it: the
+                  dots say where you are, this says there is more. */}
+              <span
+                aria-hidden
+                className="tl-scroll-cue absolute bottom-16 left-1/2 z-20 block -translate-x-1/2 sm:bottom-20"
+                style={{
+                  filter:
+                    EVENT_TONE[ev.id] === "dark"
+                      ? "drop-shadow(0 2px 6px rgba(0, 0, 0, 0.8))"
+                      : "none",
+                }}
+              >
+                <svg width="18" height="22" viewBox="0 0 18 22" fill="none">
+                  <path
+                    d="M2 2 L9 8 L16 2"
+                    stroke={tone.title}
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    opacity="0.45"
+                  />
+                  <path
+                    d="M2 12 L9 18 L16 12"
+                    stroke={tone.title}
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    opacity="0.85"
+                  />
+                </svg>
+              </span>
             </section>
           );
         })}
       </div>
+
+      <style jsx>{`
+        .tl-scroll-cue {
+          animation: tl-scroll-bounce 1.8s ease-in-out infinite;
+        }
+        @keyframes tl-scroll-bounce {
+          0%,
+          100% {
+            transform: translate(-50%, 0);
+          }
+          50% {
+            transform: translate(-50%, 6px);
+          }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .tl-scroll-cue {
+            animation: none;
+          }
+        }
+      `}</style>
     </section>
   );
 }
