@@ -15,7 +15,7 @@ export default function Page() {
           textIndent: "0.35em",
         }}
       >
-        Tanya &amp; Hemabh
+        Tanya weds Hemabh
       </p>
 
       <div

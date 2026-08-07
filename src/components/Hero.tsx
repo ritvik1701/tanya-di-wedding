@@ -215,16 +215,23 @@ export default function Hero() {
               </span>
 
               <span
-                className="hero-amp my-2 sm:my-3"
+                className="hero-amp my-2 uppercase sm:my-3"
                 style={{
                   fontFamily: "var(--font-display)",
                   color: "#ab1b23",
-                  fontSize: "clamp(1.2rem, min(3.5vw, 4.5svh), 2.8rem)",
+                  // Much smaller than the ampersand it replaces. A
+                  // four-letter word set at that size crowds the window
+                  // and competes with the names either side of it.
+                  // IntroLetter's card carries the identical block and
+                  // flips into this one, so the two must stay in step.
+                  fontSize: "clamp(0.72rem, min(2.2vw, 2.8svh), 1.15rem)",
+                  letterSpacing: "0.38em",
+                  textIndent: "0.38em",
                   lineHeight: 1,
-                  fontWeight: 400,
+                  fontWeight: 600,
                 }}
               >
-                &amp;
+                weds
               </span>
 
               <span

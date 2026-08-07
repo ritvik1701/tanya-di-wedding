@@ -644,16 +644,21 @@ export default function IntroLetter() {
                   Tanya
                 </span>
                 <span
-                  className="my-2 sm:my-3"
+                  className="my-2 uppercase sm:my-3"
                   style={{
                     fontFamily: "var(--font-display)",
                     color: "#ab1b23",
-                    fontSize: "clamp(1.2rem, min(3.5vw, 4.5svh), 2.8rem)",
+                    // Must match Hero's block exactly — this card flips
+                    // into it at the handoff, and any difference shows up
+                    // as a jump at the moment the two cross over.
+                    fontSize: "clamp(0.72rem, min(2.2vw, 2.8svh), 1.15rem)",
+                    letterSpacing: "0.38em",
+                    textIndent: "0.38em",
                     lineHeight: 1,
-                    fontWeight: 400,
+                    fontWeight: 600,
                   }}
                 >
-                  &amp;
+                  weds
                 </span>
                 <span
                   lang="hi"
